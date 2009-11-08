@@ -1,1 +1,31 @@
-Information forthcoming
+== ABOUT ==
+
+MediaWiki-BookDesign is a graphical book development extension for the
+MediaWiki software. It allows the creation of large structured books
+using an intuitive graphical outline-based interface.
+
+== LICENSE ==
+
+MediaWiki-BookDesign is released under the terms of the GPLv2. See the
+file LICENSE for details.
+
+== PREREQUISITES ==
+
+Requires MediaWiki 1.14.0. Originally developed with version 1.14.0, it may
+work with other versions but has not been tested.
+
+== INSTALLATION ==
+
+Copy the contents of the distribution to the "extensions" directory of your
+MediaWiki installation. Add the following line of code to your
+LocalSettings.php file:
+
+  include_once( "$IP/extensions/BookDesigner/BookDesigner.php" );
+
+== INTERFACE ==
+
+Adds a new "Special:BookDesigner" page to MediaWiki.
+
+== CONTACT ==
+
+For more information, contact wknight8111 at gmail.
