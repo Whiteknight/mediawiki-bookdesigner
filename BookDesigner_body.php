@@ -125,7 +125,7 @@ class BookDesigner extends SpecialPage {
             $wgOut->addHTML($par);
         }
         else if($wgRequest->wasPosted()) {
-            $text = $wgRequest->getText('WKVBDHiddenTextArea');
+            $text = $wgRequest->getText('VBDHiddenTextArea');
             $lines = explode("\n", $text);
             $this->bookname = $lines[0];
             $this->parseBookPage($lines[0], $lines[0], $lines, 1);
@@ -136,9 +136,9 @@ class BookDesigner extends SpecialPage {
 
 
 <form action="/wiki/Special:BookDesigner" method="POST">
-  <textarea name="WKVBDHiddenTextArea" id="WKVBDHiddenTextArea" style="display: none;"></textarea>
-  <div id="WKVBDWelcomeSpan">This is the <b>Visual Book Design</b> outlining tool. Use this page to create an outline for your new book.</div>
-  <div id="WKVBDStatSpan"></div>
+  <textarea name="VBDHiddenTextArea" id="VBDHiddenTextArea" style="display: none;"></textarea>
+  <div id="VBDWelcomeSpan">This is the <b>Visual Book Design</b> outlining tool. Use this page to create an outline for your new book.</div>
+  <div id="VBDStatSpan"></div>
   <div style="float: right; margin: 5px; padding: 5px; border: 1px solid #AAAAAA; background-color: #F8F8F8; width: 25%;">
     <b>Quick Start Instructions</b>
     <ol>
@@ -148,7 +148,7 @@ class BookDesigner extends SpecialPage {
       <li>When you are finished, click <b>Publish Book!</b> to create the book
     </ol>
   </div>
-  <div id="WKVBDSpan" style="width: 65%;">JavaScript is not working. Make sure to enable JavaScript in your browser.</div>
+  <div id="VBDSpan" style="width: 65%;">JavaScript is not working. Make sure to enable JavaScript in your browser.</div>
   <input type="submit" value="Publish Book!"/> 
 </form>
 

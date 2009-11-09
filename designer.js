@@ -14,8 +14,8 @@ var vbd = {
   newheadcnt: 1,
 
   //div IDs where the gadget is inserted into the page
-  formspan: "WKVBDSpan",
-  statspan: "WKVBDStatSpan",
+  formspan: "VBDSpan",
+  statspan: "VBDStatSpan",
 
   // Navigation templates and configuration parameters
   templates: new Array(
@@ -231,7 +231,7 @@ vbd.makeTemplateText = function () {
 }
 
 vbd.updateSerializeData = function() {
-    var box = document.getElementById('WKVBDHiddenTextArea');
+    var box = document.getElementById('VBDHiddenTextArea');
     box.value = vbd.pageTree.makeSaveText();
 }
 
