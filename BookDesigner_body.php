@@ -8,13 +8,15 @@ class BookDesigner extends SpecialPage {
     protected $bookname = "";
     protected $debug = false;
 
+    // Quick and dirty debugging utilities. The value of $this->debug determines whether
+    // we print something. These functions can probably disappear soon since the
+    // parseBookPage parser routine has been mostly tested.
     function _dbg($word)
     {
         global $wgOut;
         if($this->debug)
             $wgOut->addHTML($word);
     }
-
     function _dbgl($word)
     {
         $this->_dbg($word . "<br/>");
@@ -113,8 +115,10 @@ class BookDesigner extends SpecialPage {
         global $wgRequest, $wgOut;
         $this->setHeaders();
         $wgOut->setPageTitle( "Book Designer" );
+        
+        // TODO: Don't hardcode the path. Pick a better way to access this file
         $bdpath = "/wiki/extensions/BookDesigner/";
-        //$wgOut->addScriptFile($bdpath . "jquery-flydom-3.0.6.js");
+        
         $wgOut->addScriptFile($bdpath . "bookpage.js");
         $wgOut->addScriptFile($bdpath . "pagehead.js");
         $wgOut->addScriptFile($bdpath . "designer.js");
