@@ -7,16 +7,12 @@ class BookDesigner extends SpecialPage {
 
     // Set this to true if you want to enable debugging output. Mostly for development.
     protected $debug = false;
-    
-    // Changethis if the publicly-visible location of your extension is different.
-    // MUST be suffixed with a "/"
-    protected $extensionloc = "/wiki/extensions/BookDesigner/";
-    
+
     // Change this if the prefix is different on your system.
-    protected $pageprefix = "/wiki/index.php?title="
+    protected $pageprefix = "/wiki/index.php?title=";
 
     protected $bookname = "";
-    
+
     // Quick and dirty debugging utilities. The value of $this->debug determines whether
     // we print something. These functions can probably disappear soon since the
     // parseBookPage parser routine has been mostly tested.
@@ -122,13 +118,16 @@ class BookDesigner extends SpecialPage {
 
     function execute( $par ) {
         global $wgRequest, $wgOut;
+	global $wgScriptPath;
         $this->setHeaders();
         $wgOut->setPageTitle( "Book Designer" );
+	$jspath = "$wgScriptPath/extensions/BookDesigner";
+	$csspath = "$wgScriptPath/extensions/BookDesigner";
 
-        $wgOut->addScriptFile($this->extensionloc . "bookpage.js");
-        $wgOut->addScriptFile($this->extensionloc . "pagehead.js");
-        $wgOut->addScriptFile($this->extensionloc . "designer.js");
-        $wgOut->addStyle($this->extensionloc . "designer.css");
+        $wgOut->addScriptFile($jspath . "/bookpage.js");
+        $wgOut->addScriptFile($jspath . "/pagehead.js");
+        $wgOut->addScriptFile($jspath . "/designer.js");
+        $wgOut->addStyle($csspath . "/designer.css");
 
         if(isset($par)) {
             // TODO: we've specified a book name, load that book into the outline
@@ -159,7 +158,7 @@ class BookDesigner extends SpecialPage {
     </ol>
   </div>
   <div id="VBDSpan" style="width: 65%;">JavaScript is not working. Make sure to enable JavaScript in your browser.</div>
-  <input type="submit" value="Publish Book!"/> 
+  <input type="submit" value="Publish Book!"/>
 </form>
 
 EOD;
