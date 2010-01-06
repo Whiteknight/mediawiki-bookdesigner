@@ -5,9 +5,18 @@ class BookDesigner extends SpecialPage {
         wfLoadExtensionMessages('BookDesigner');
     }
 
-    protected $bookname = "";
+    // Set this to true if you want to enable debugging output. Mostly for development.
     protected $debug = false;
+    
+    // Changethis if the publicly-visible location of your extension is different.
+    // MUST be suffixed with a "/"
+    protected $extensionloc = "/wiki/extensions/BookDesigner/";
+    
+    // Change this if the prefix is different on your system.
+    protected $pageprefix = "/wiki/index.php?title="
 
+    protected $bookname = "";
+    
     // Quick and dirty debugging utilities. The value of $this->debug determines whether
     // we print something. These functions can probably disappear soon since the
     // parseBookPage parser routine has been mostly tested.
@@ -107,7 +116,7 @@ class BookDesigner extends SpecialPage {
         $title = Title::newFromText($path);
         $article = new Article($title);
         $article->doEdit($pagetext, "Creating new book automatically");
-	$wgOut->addHTML("Created <a href=\"/wiki/" . $path . "\">" . $path . "</a><br/>");
+        $wgOut->addHTML("Created <a href=\"" . $this->pageprefix . $path . "\">" . $path . "</a><br/>");
         return $idx;
     }
 
@@ -115,14 +124,11 @@ class BookDesigner extends SpecialPage {
         global $wgRequest, $wgOut;
         $this->setHeaders();
         $wgOut->setPageTitle( "Book Designer" );
-        
-        // TODO: Don't hardcode the path. Pick a better way to access this file
-        $bdpath = "/wiki/extensions/BookDesigner/";
-        
-        $wgOut->addScriptFile($bdpath . "bookpage.js");
-        $wgOut->addScriptFile($bdpath . "pagehead.js");
-        $wgOut->addScriptFile($bdpath . "designer.js");
-        $wgOut->addStyle($bdpath . "designer.css");
+
+        $wgOut->addScriptFile($this->extensionloc . "bookpage.js");
+        $wgOut->addScriptFile($this->extensionloc . "pagehead.js");
+        $wgOut->addScriptFile($this->extensionloc . "designer.js");
+        $wgOut->addStyle($this->extensionloc . "designer.css");
 
         if(isset($par)) {
             // TODO: we've specified a book name, load that book into the outline
@@ -139,7 +145,7 @@ class BookDesigner extends SpecialPage {
             $text = <<<EOD
 
 
-<form action="/wiki/Special:BookDesigner" method="POST">
+<form action="/wiki/index.php?title=Special:BookDesigner" method="POST">
   <textarea name="VBDHiddenTextArea" id="VBDHiddenTextArea" style="display: none;"></textarea>
   <div id="VBDWelcomeSpan">This is the <b>Visual Book Design</b> outlining tool. Use this page to create an outline for your new book.</div>
   <div id="VBDStatSpan"></div>
