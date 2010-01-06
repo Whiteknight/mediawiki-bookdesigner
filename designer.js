@@ -1,7 +1,7 @@
 //Visual Book designer (vbd) class
 var vbd = {
     // Version numbers
-    version:  3.73,
+    version:  3.74,
     bookpageversion: 0.00,
     pageheadversion: 0.00,
 
