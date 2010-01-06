@@ -32,7 +32,7 @@ class BookDesigner extends SpecialPage {
     // we have.
     function parseBookPage($page, $path, $lines, $idx)
     {
-        global $wgOut;
+        global $wgOut, $wgScriptPath;
         $pagetext = "{{" . $this->bookname . "}}\n\n";
         // First, read out the subpages
         for($i = $idx; $i < sizeof($lines); $i++) {
@@ -112,7 +112,7 @@ class BookDesigner extends SpecialPage {
         $title = Title::newFromText($path);
         $article = new Article($title);
         $article->doEdit($pagetext, "Creating new book automatically");
-        $wgOut->addHTML("Created <a href=\"" . $this->pageprefix . $path . "\">" . $path . "</a><br/>");
+        $wgOut->addHTML("Created <a href=\"" . $wgScriptPath . "/index.php?title=" . $path . "\">" . $path . "</a><br/>");
         return $idx;
     }
 
@@ -144,7 +144,7 @@ class BookDesigner extends SpecialPage {
             $text = <<<EOD
 
 
-<form action="/wiki/index.php?title=Special:BookDesigner" method="POST">
+<form action="$wgScriptPath/index.php?title=Special:BookDesigner" method="POST">
   <textarea name="VBDHiddenTextArea" id="VBDHiddenTextArea" style="display: none;"></textarea>
   <div id="VBDWelcomeSpan">This is the <b>Visual Book Design</b> outlining tool. Use this page to create an outline for your new book.</div>
   <div id="VBDStatSpan"></div>
