@@ -1,40 +1,40 @@
 //Visual Book designer (vbd) class
 var vbd = {
-  // Version numbers
-  version:  3.73,
-  bookpageversion: 0.00,
-  pageheadversion: 0.00,
+    // Version numbers
+    version:  3.73,
+    bookpageversion: 0.00,
+    pageheadversion: 0.00,
 
-  // default name of all new books:
-  pageTree: null,
-  defName: 'New Book',
-  defpagename: 'New Page',
-  defheadname: 'New Heading',
-  newpagecnt: 1,
-  newheadcnt: 1,
+    // default name of all new books:
+    pageTree: null,
+    defName: 'New Book',
+    defpagename: 'New Page',
+    defheadname: 'New Heading',
+    newpagecnt: 1,
+    newheadcnt: 1,
 
-  //div IDs where the gadget is inserted into the page
-  formspan: "VBDSpan",
-  statspan: "VBDStatSpan",
+    //div IDs where the gadget is inserted into the page
+    formspan: "VBDSpan",
+    statspan: "VBDStatSpan",
 
-  // Navigation templates and configuration parameters
-  templates: new Array(
-    ["Simple Header",    0, 0, "Simple header"],
-    ["Page Nav Header",  1, 0, "Header with forward/back links"],
-    ["Page Nav Header2", 1, 0, "Header with forward/back links (2)"],
-    ["Page List Header", 0, 1, "Header with page list"],
-    ["Page List Nav",    1, 1, "Header with page list and forward/back links"]
-  ),
-  template: 0,
+    // Navigation templates and configuration parameters
+    templates: new Array(
+        ["Simple Header",    0, 0, "Simple header"],
+        ["Page Nav Header",  1, 0, "Header with forward/back links"],
+        ["Page Nav Header2", 1, 0, "Header with forward/back links (2)"],
+        ["Page List Header", 0, 1, "Header with page list"],
+        ["Page List Nav",    1, 1, "Header with page list and forward/back links"]
+    ),
+    template: 0,
 
-  // Subjects for categorization
-  subjects: new Array(),
+    // Subjects for categorization
+    subjects: new Array(),
 
-  // other options
-  defaultinherit:  false,
-  defaultcollapse: false,
-  commentsaspages: false,
-  useexternaledit: false,
+    // other options
+    defaultinherit:  false,
+    defaultcollapse: false,
+    commentsaspages: false,
+    useexternaledit: false,
 };
 
 //Basic array management functions
@@ -61,9 +61,13 @@ vbd.makeOptionsCheckbox = function (field) {
 }
 
 //Initialize
-$(document).ready(function () {
-  vbd.pageTree = new BookPage(vbd.defName);
-  vbd.visual();
+//$(document).ready(function () {
+//  vbd.pageTree = new BookPage(vbd.defName);
+//  vbd.visual();
+//});
+addOnloadHook(function() {
+    vbd.pageTree = new BookPage(vbd.defName);
+    vbd.visual();
 });
 
 vbd.spanText = function(spanid, txt) {
@@ -219,11 +223,11 @@ vbd.forceFirstCaps = function(title) {
 vbd.makeTemplateText = function () {
   var template = vbd.templates[vbd.template];
   var book = vbd.pageTree.pagename;
-  var text = "{"+"{subst:User:Whiteknight/" + template[0] + "|" + 
+  var text = "{"+"{subst:User:Whiteknight/" + template[0] + "|" +
     ((template[1])?("book="):("")) + book;
   if(template[2] == 1) {
     text += "|" + ((template[1] == 1)?("list="):("")) + vbd.pageTree.makeTemplateLinks();
-    text += "[[" + book + "/Resources|Resources]] - " + 
+    text += "[[" + book + "/Resources|Resources]] - " +
             "[[" + book + "/Licensing|Licensing]] - " +
             "[[Talk:" + book + "|Discuss]]";
   }
