@@ -160,6 +160,24 @@ EOD
         return $text;
     }
 
+    function getOptions() {
+        $this->createleaves = $wgRequest->getCheck("optCreateLeaves");
+        $this->_dbgl("Create leaves: " . ($this->createleaves ? "1" : "0"));
+
+        $this->usetemplates = $wgRequest->getCheck("optHeaderTemplate");
+        $this->_dbgl("Use Templates: " . ($this->usetemplates ? "1" : "0"));
+
+        $this->numberpages = $wgRequest->getCheck("optNumberPages");
+        $this->_dbgl("Number Pages: "  . ($this->numberpages  ? "1" : "0"));
+
+        $this->usenamespace = $wgRequest->getCheck("optUseNamespace");
+        $this->namespace = $this->usenamespace ? $wgRequest->getText("optNamespace") . ":" : "";
+        $this->_dbgl("Use Namespace: " . ($this->usenamespace ? "1" : "0") . " " . $this->namespace);
+
+        $this->autogentemp = $wgRequest->getCheck("optAutogenTemplate");
+        $this->_dbgl("Autogenerate Template: " . ($this->autogenemp ? "1" : "0");
+    }
+
     // Main function, this is where execution starts
     function execute( $par ) {
         global $wgRequest, $wgOut, $wgScriptPath;
@@ -178,23 +196,10 @@ EOD
             $wgOut->addHTML($par);
         }
         else if($wgRequest->wasPosted()) {
+            // TODO: Validate that we are logged in. Also, create an option to require
+            //       certain permissions (either admin, or a custom permission or something)
             $text = $wgRequest->getText('VBDHiddenTextArea');
-
-            $this->createleaves = $wgRequest->getCheck("optCreateLeaves");
-            $this->_dbgl("Create leaves: " . ($this->createleaves ? "1" : "0"));
-
-            $this->usetemplates = $wgRequest->getCheck("optHeaderTemplate");
-            $this->_dbgl("Use Templates: " . ($this->usetemplates ? "1" : "0"));
-
-            $this->numberpages = $wgRequest->getCheck("optNumberPages");
-            $this->_dbgl("Number Pages: "  . ($this->numberpages  ? "1" : "0"));
-
-            $this->usenamespace = $wgRequest->getCheck("optUseNamespace");
-            $this->namespace = $this->usenamespace ? $wgRequest->getText("optNamespace") . ":" : "";
-            $this->_dbgl("Use Namespace: " . ($this->usenamespace ? "1" : "0") . " " . $this->namespace);
-
-            $this->autogentemp = $wgRequest->getCheck("optAutogenTemplate");
-            $this->_dbgl("Autogenerate Template: " . ($this->autogenemp ? "1" : "0");
+            $this->getOptions();
 
             $lines = explode("\n", $text);
             $this->bookname = $lines[0];
@@ -233,7 +238,14 @@ EOD
         <input type="checkbox" name="optHeaderTemplate" checked>Use Header Template</input><br>
         <input type="checkbox" name="optAutogenTemplate">Autogenerate Header Template</input><br>
         <!-- Add a <select> item here with a list of auto-generate template styles -->
-        <input type="checkbox" name="optUseNamespace">Use Alternate Namespace:</input><input type="text" name="optNamespace"/>-
+        <input type="checkbox" name="optUseNamespace">Use Alternate Namespace:</input><input type="text" name="optNamespace"/><br>
+
+        <!-- These are TODO Options -->
+        <input type="checkbox" name="optUseUserSpace" disabled>Create in user space</input><br>
+        Create Pages:
+        <input type="checkbox" name="optIntroductionPage" disabled>Introduction Page</input> &mdash;
+        <input type="checkbox" name="optResourcesPage" disabled>Resources Page</input> &mdash;
+        <input type="checkbox" name="optLicensingPage" disabled>Licensing Page</input>
     </div>
     <!--
     TODO: This is a temporary addition to aid in debugging. It shows the intermediate code before it's transmitted to the
