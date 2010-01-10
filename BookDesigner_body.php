@@ -17,6 +17,7 @@ class BookDesigner extends SpecialPage {
     protected $usetemplates = false;
     protected $numberpages  = false;
     protected $usenamespace = false;
+    protected $autogentemp  = false;
     protected $namespace    = "";
 
     // Quick and dirty debugging utilities. The value of $this->debug determines whether
@@ -128,9 +129,34 @@ class BookDesigner extends SpecialPage {
             $title = Title::newFromText($path);
             $article = new Article($title);
             $article->doEdit($pagetext, "Creating new book automatically");
-            $wgOut->addHTML("Created <a href=\"/wiki/" . $path . "\">" . $path . "</a><br/>");
+            $wgOut->addHTML("Created <a href=\"" . $this->pageprefix . $path . "\">" . $path . "</a><br/>");
         }
         return $idx;
+    }
+
+    function generateHeaderTemplate( $bookname ) {
+        global $wgOut;
+        $name = "Template:" . $bookname;
+        $title = Title::newFromText($name);
+        $article = new Article($title);
+        $text = $this->getTemplateText($bookname);
+        $article->doEdit($text, "Creating header template for " . $bookname);
+        $wgOut->addHTML("Created <a href=\"" . $this->pageprefix . $name . "\">" . $name . "</a><br/>");
+    }
+
+    // Returns an EXTREMELY basic text string for creating a header template.
+    // TODO: Make this less bare-bones
+    function getTemplateText($bookname) {
+        $text = <<<EOD
+
+<div style="border: 1px solid #AAAAAA; background-color: #F8F8F8; padding: 5px; margin: auto; width: 95%">
+    <center><big>
+        '''[[$bookname]]'''
+    </big></center>
+</div>
+
+EOD
+        return $text;
     }
 
     function execute( $par ) {
@@ -151,25 +177,35 @@ class BookDesigner extends SpecialPage {
         }
         else if($wgRequest->wasPosted()) {
             $text = $wgRequest->getText('VBDHiddenTextArea');
+
             $this->createleaves = $wgRequest->getCheck("optCreateLeaves");
+            $this->_dbgl("Create leaves: " . ($this->createleaves ? "1" : "0"));
+
             $this->usetemplates = $wgRequest->getCheck("optHeaderTemplate");
+            $this->_dbgl("Use Templates: " . ($this->usetemplates ? "1" : "0"));
+
             $this->numberpages = $wgRequest->getCheck("optNumberPages");
+            $this->_dbgl("Number Pages: "  . ($this->numberpages  ? "1" : "0"));
+
             $this->usenamespace = $wgRequest->getCheck("optUseNamespace");
             $this->namespace = $this->usenamespace ? $wgRequest->getText("optNamespace") . ":" : "";
-            $this->_dbgl("Create leaves: " . ($this->createleaves ? "1" : "0"));
-            $this->_dbgl("Use Templates: " . ($this->usetemplates ? "1" : "0"));
-            $this->_dbgl("Number Pages: "  . ($this->numberpages  ? "1" : "0"));
             $this->_dbgl("Use Namespace: " . ($this->usenamespace ? "1" : "0") . " " . $this->namespace);
+
+            $this->autogentemp = $wgRequest->getCheck("optAutogenTemplate");
+            $this->_dbgl("Autogenerate Template: " . ($this->autogenemp ? "1" : "0");
+
             $lines = explode("\n", $text);
             $this->bookname = $lines[0];
             $this->parseBookPage($lines[0], $this->namespace . $lines[0], $lines, 1);
-            // TODO: Create a template for this
+            if ($this->autogentemp) {
+                $this->generateHeaderTemplate($this->bookname);
+            }
         }
         else {
             $text = <<<EOD
 
 
-<form action="/wiki/Special:BookDesigner" method="POST">
+<form action="${this->pageprefix}Special:BookDesigner" method="POST">
     <textarea name="VBDHiddenTextArea" id="VBDHiddenTextArea" style="display: none;"></textarea>
     <div id="VBDWelcomeSpan">
         This is the <b>Visual Book Design</b> outlining tool. Use this page to create an outline for your new book.
@@ -193,6 +229,8 @@ class BookDesigner extends SpecialPage {
         <input type="checkbox" name="optCreateLeaves" checked>Create Leaf Pages</input><br>
         <input type="checkbox" name="optNumberPages">Number Pages</input><br>
         <input type="checkbox" name="optHeaderTemplate" checked>Use Header Template</input><br>
+        <input type="checkbox" name="optAutogenTemplate">Autogenerate Header Template</input><br>
+        <!-- Add a <select> item here with a list of auto-generate template styles -->
         <input type="checkbox" name="optUseNamespace">Use Alternate Namespace:</input><input type="text" name="optNamespace"/>-
     </div>
     <!--
