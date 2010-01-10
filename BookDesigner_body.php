@@ -134,6 +134,7 @@ class BookDesigner extends SpecialPage {
         return $idx;
     }
 
+    // Build the header template
     function generateHeaderTemplate( $bookname ) {
         global $wgOut;
         $name = "Template:" . $bookname;
@@ -159,6 +160,7 @@ EOD
         return $text;
     }
 
+    // Main function, this is where execution starts
     function execute( $par ) {
         global $wgRequest, $wgOut, $wgScriptPath;
         $this->setHeaders();
