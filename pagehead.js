@@ -14,22 +14,23 @@ function PageHeading(name) {
 PageHeading.prototype.getTextNode = function () {
   var self = this;
   var div = vbd.makeElement('small', {style: "padding-left: 2em;"}, 
-    ((this.pagetext.length == 0)?('[click here to edit heading text]'):(this.pagetext)));
-  div.onclick = function() {
-    var edit = vbd.makeElement('textarea', {rows:10});
-    edit.value = self.pagetext;
-    self.formspan.innerHTML = "";
-    self.formspan.appendChild(document.createTextNode('Enter some text for the page:'));
-    self.formspan.appendChild(edit);
-    self.formspan.appendChild(vbd.makeButton('', 'Save', function() {
-      self.pagetext = edit.value;
-      if(self.pagetext.match(/^\s*$/)) self.pagetext = "";
-      self.formspan.innerHTML = "";
-      vbd.visual();
-    }));
-    self.closeButton();
-    edit.focus(); 
-  }
+  //  ((this.pagetext.length == 0)?('[click here to edit heading text]'):(this.pagetext)));
+  "");
+  //div.onclick = function() {
+  //  var edit = vbd.makeElement('textarea', {rows:10});
+  //  edit.value = self.pagetext;
+  //  self.formspan.innerHTML = "";
+  //  self.formspan.appendChild(document.createTextNode('Enter some text for the page:'));
+  //  self.formspan.appendChild(edit);
+  //  self.formspan.appendChild(vbd.makeButton('', 'Save', function() {
+  //    self.pagetext = edit.value;
+  //    if(self.pagetext.match(/^\s*$/)) self.pagetext = "";
+  //    self.formspan.innerHTML = "";
+  //    vbd.visual();
+  //  }));
+  //  self.closeButton();
+  //  edit.focus(); 
+  //}
   div.style.cursor = "pointer";
   return div;
 }
@@ -210,7 +211,7 @@ PageHeading.prototype.makeNode = function () {
     this.getTitleNode(), " - ",
     vbd.makeElement('small', null, this.makeSubpagesLinks()),
     vbd.makeElement('br'),
-    this.getTextNode(),
+    //this.getTextNode(),
     this.formspan
   ]);
   this.box.style.position = "relative";

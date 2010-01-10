@@ -5,13 +5,19 @@ class BookDesigner extends SpecialPage {
         wfLoadExtensionMessages('BookDesigner');
     }
 
-    // Set this to true if you want to enable debugging output. Mostly for development.
-    protected $debug = false;
-
     // Change this if the prefix is different on your system.
-    protected $pageprefix = "/wiki/index.php?title=";
+    protected $pageprefix   = "/wiki/index.php?title=";
 
-    protected $bookname = "";
+    // set this to true to enable debugging output.
+    protected $debug        = false;
+
+    // Internal values. Don't modify them, they get set at runtime
+    protected $bookname     = "";
+    protected $createleaves = false;
+    protected $usetemplates = false;
+    protected $numberpages  = false;
+    protected $usenamespace = false;
+    protected $namespace    = "";
 
     // Quick and dirty debugging utilities. The value of $this->debug determines whether
     // we print something. These functions can probably disappear soon since the
@@ -33,7 +39,10 @@ class BookDesigner extends SpecialPage {
     function parseBookPage($page, $path, $lines, $idx)
     {
         global $wgOut, $wgScriptPath;
-        $pagetext = "{{" . $this->bookname . "}}\n\n";
+        $pagetext = $this->usetemplates ? "{{" . $this->bookname . "}}\n\n" : "";
+        $createleaf = $this->createleaves || ($idx == 1);
+        $subpagenum = 0;
+        $this->_dbgl("Creating leaf page: " . ($createleaf?"1":"0"));
         // First, read out the subpages
         for($i = $idx; $i < sizeof($lines); $i++) {
             $line = rtrim($lines[$i]);
@@ -55,9 +64,12 @@ class BookDesigner extends SpecialPage {
             else {
                 // We have a page name
                 $this->_dbgl("Recurse");
-                $newpath = $path . "/" . $line;
-                $pagetext .= "*[[" . $newpath . "|" . $line . "]]\n";
-                $i = $this->parseBookPage($line, $newpath, $lines, $i + 1);
+                $subpagenum++;
+                $name = ($this->numberpages ? $subpagenum . ". " : "") . $line;
+                $createpage = TRUE;
+                $newpath = $path . "/" . $name;
+                $pagetext .= "*[[" . $newpath . "|" . $name . "]]\n";
+                $i = $this->parseBookPage($name, $newpath, $lines, $i + 1);
             }
         }
         $pagetext .= "\n";
@@ -79,6 +91,7 @@ class BookDesigner extends SpecialPage {
                 break;
             }
             $this->_dbgl("Heading");
+            $createpage = TRUE;
             $pagetext .= "== " . $line . " ==\n\n";
             // a heading can have pages under it, so enter another loop here to
             // handle those pages.
@@ -109,20 +122,23 @@ class BookDesigner extends SpecialPage {
         //$wgOut->addHTML("<h2>" . $page . "</h2>");
         //$wgOut->addHTML("<b>" . $path . "</b>");
         //$wgOut->addHTML("<pre>" . $pagetext . "</pre>");
-        $title = Title::newFromText($path);
-        $article = new Article($title);
-        $article->doEdit($pagetext, "Creating new book automatically");
-        $wgOut->addHTML("Created <a href=\"" . $wgScriptPath . "/index.php?title=" . $path . "\">" . $path . "</a><br/>");
+        // We only create the page if (1) we opt to create all pages, (2) the page contains subpages,
+        // (3) the page contains headings, or (4) it is the main page.
+        if ($createleaf) {
+            $title = Title::newFromText($path);
+            $article = new Article($title);
+            $article->doEdit($pagetext, "Creating new book automatically");
+            $wgOut->addHTML("Created <a href=\"/wiki/" . $path . "\">" . $path . "</a><br/>");
+        }
         return $idx;
     }
 
     function execute( $par ) {
-        global $wgRequest, $wgOut;
-	global $wgScriptPath;
+        global $wgRequest, $wgOut, $wgScriptPath;
         $this->setHeaders();
-        $wgOut->setPageTitle( "Book Designer" );
-	$jspath = "$wgScriptPath/extensions/BookDesigner";
-	$csspath = "$wgScriptPath/extensions/BookDesigner";
+        $wgOut->setPageTitle("Book Designer");
+        $jspath  = "$wgScriptPath/extensions/BookDesigner";
+        $csspath = "$wgScriptPath/extensions/BookDesigner";
 
         $wgOut->addScriptFile($jspath . "/bookpage.js");
         $wgOut->addScriptFile($jspath . "/pagehead.js");
@@ -135,30 +151,58 @@ class BookDesigner extends SpecialPage {
         }
         else if($wgRequest->wasPosted()) {
             $text = $wgRequest->getText('VBDHiddenTextArea');
+            $this->createleaves = $wgRequest->getCheck("optCreateLeaves");
+            $this->usetemplates = $wgRequest->getCheck("optHeaderTemplate");
+            $this->numberpages = $wgRequest->getCheck("optNumberPages");
+            $this->usenamespace = $wgRequest->getCheck("optUseNamespace");
+            $this->namespace = $this->usenamespace ? $wgRequest->getText("optNamespace") . ":" : "";
+            $this->_dbgl("Create leaves: " . ($this->createleaves ? "1" : "0"));
+            $this->_dbgl("Use Templates: " . ($this->usetemplates ? "1" : "0"));
+            $this->_dbgl("Number Pages: "  . ($this->numberpages  ? "1" : "0"));
+            $this->_dbgl("Use Namespace: " . ($this->usenamespace ? "1" : "0") . " " . $this->namespace);
             $lines = explode("\n", $text);
             $this->bookname = $lines[0];
-            $this->parseBookPage($lines[0], $lines[0], $lines, 1);
+            $this->parseBookPage($lines[0], $this->namespace . $lines[0], $lines, 1);
             // TODO: Create a template for this
         }
         else {
             $text = <<<EOD
 
 
-<form action="$wgScriptPath/index.php?title=Special:BookDesigner" method="POST">
-  <textarea name="VBDHiddenTextArea" id="VBDHiddenTextArea" style="display: none;"></textarea>
-  <div id="VBDWelcomeSpan">This is the <b>Visual Book Design</b> outlining tool. Use this page to create an outline for your new book.</div>
-  <div id="VBDStatSpan"></div>
-  <div style="float: right; margin: 5px; padding: 5px; border: 1px solid #AAAAAA; background-color: #F8F8F8; width: 25%;">
-    <b>Quick Start Instructions</b>
-    <ol>
-      <li>Click the title of a book to rename it<br>Click "<b>New Book</b>" to give your book a name
-      <li>Click "Headings for this page" to add sections to the page<br>Click the <b>[ + ]</b> To add 1 new section
-      <li>Click "Subpages" to create new pages in the book here<br>Click the <b>[ + ]</b> to add 1 new subpage
-      <li>When you are finished, click <b>Publish Book!</b> to create the book
-    </ol>
-  </div>
-  <div id="VBDSpan" style="width: 65%;">JavaScript is not working. Make sure to enable JavaScript in your browser.</div>
-  <input type="submit" value="Publish Book!"/>
+<form action="/wiki/Special:BookDesigner" method="POST">
+    <textarea name="VBDHiddenTextArea" id="VBDHiddenTextArea" style="display: none;"></textarea>
+    <div id="VBDWelcomeSpan">
+        This is the <b>Visual Book Design</b> outlining tool. Use this page to create an outline for your new book.
+    </div>
+    <div id="VBDStatSpan"></div>
+    <div style="margin: auto; clear: both; padding: 5px; border: 1px solid #AAAAAA; background-color: #F8F8F8; width: 95%;">
+        <b>Quick Start Instructions</b>
+        <ol>
+            <li>Click the title of a book to rename it<br>Click "<b>New Book</b>" to give your book a name</li>
+            <li>Click "Headings for this page" to add sections to the page<br>Click the <b>[ + ]</b> To add 1 new section</li>
+            <li>Click "Subpages" to create new pages in the book here<br>Click the <b>[ + ]</b> to add 1 new subpage</li>
+            <li>When you are finished, click <b>Publish Book!</b> to create the book
+        </ol>
+    </div>
+    <div id="VBDSpan" style="width: 65%;">
+        JavaScript is not working. Make sure to enable JavaScript in your browser.
+    </div>
+    <input type="submit" value="Publish Book!"/><br>
+    <div id="VBDOptionsSpan">
+        <h2>Options</h2>
+        <input type="checkbox" name="optCreateLeaves" checked>Create Leaf Pages</input><br>
+        <input type="checkbox" name="optNumberPages">Number Pages</input><br>
+        <input type="checkbox" name="optHeaderTemplate" checked>Use Header Template</input><br>
+        <input type="checkbox" name="optUseNamespace">Use Alternate Namespace:</input><input type="text" name="optNamespace"/>-
+    </div>
+    <!--
+    TODO: This is a temporary addition to aid in debugging. It shows the intermediate code before it's transmitted to the
+          server. This way if there is some kind of a server error, we can save a copy of that intermediate code to a safe place
+          so when we are making a hugeo outline we don't lose all that work.
+    -->
+    <small>
+        <a href="#" onclick="document.getElementById('VBDHiddenTextArea').style.display = 'block';">Show Intermediate Code</a>
+    </small>
 </form>
 
 EOD;
