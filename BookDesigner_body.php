@@ -156,7 +156,7 @@ class BookDesigner extends SpecialPage {
     </big></center>
 </div>
 
-EOD
+EOD;
         return $text;
     }
 
@@ -175,7 +175,7 @@ EOD
         $this->_dbgl("Use Namespace: " . ($this->usenamespace ? "1" : "0") . " " . $this->namespace);
 
         $this->autogentemp = $wgRequest->getCheck("optAutogenTemplate");
-        $this->_dbgl("Autogenerate Template: " . ($this->autogenemp ? "1" : "0");
+        $this->_dbgl("Autogenerate Template: " . ($this->autogenemp ? "1" : "0"));
     }
 
     // Main function, this is where execution starts
@@ -212,7 +212,7 @@ EOD
             $text = <<<EOD
 
 
-<form action="${this->pageprefix}Special:BookDesigner" method="POST">
+<form action="{$this->pageprefix}Special:BookDesigner" method="POST">
     <textarea name="VBDHiddenTextArea" id="VBDHiddenTextArea" style="display: none;"></textarea>
     <div id="VBDWelcomeSpan">
         This is the <b>Visual Book Design</b> outlining tool. Use this page to create an outline for your new book.
