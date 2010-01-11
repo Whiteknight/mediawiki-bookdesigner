@@ -1,9 +1,9 @@
 <?php
 $messages = array();
- 
+
 /* *** English *** */
-$messages['en'] = array( 
-	'BookDesigner' => 'BookDesigner',
-	'BookDesigner-desc' => "Design and create books",
+$messages['en'] = array(
+	'bookdesigner' => 'BookDesigner',
+	'bookdesigner-desc' => "Design and create books",
 );
 
