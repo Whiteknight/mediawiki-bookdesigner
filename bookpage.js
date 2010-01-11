@@ -16,20 +16,20 @@ function BookPage(name) {
 
 //add a new heading to the page
 BookPage.prototype.addHeading = function(heading) {
-  heading.parent = this;
-  this.headings.push(heading);
+    heading.parent = this;
+    this.headings.push(heading);
 }
 
 //add a new subpage to the page
 BookPage.prototype.addSubpage = function(subpage) {
-  subpage.parent = this;
-  this.subpages.push(subpage);
+    subpage.parent = this;
+    this.subpages.push(subpage);
 }
 
 //Show a little animation when things are happening behind the scenes
 // TODO: Move this to a local image
 BookPage.prototype.makeLoadingNotice = function(text) {
-  this.formspan.innerHTML = "<img src=\"http://upload.wikimedia.org/wikipedia/commons/4/42/Loading.gif\"> <big>" + text + "...</big>"
+    this.formspan.innerHTML = "<img src=\"http://upload.wikimedia.org/wikipedia/commons/4/42/Loading.gif\"> <big>" + text + "...</big>"
 }
 
 //make an editor, according to the users preferences
@@ -45,131 +45,135 @@ BookPage.prototype.makeEditInterface = function(page, deftext, defsummary) {
 //create the part of the outline for the page text and comments
 // TODO: See if jQuery has any UI magic that will make all this look less ugly
 BookPage.prototype.getTextNode = function () {
-  var self = this;
-  var div = vbd.makeElement('small', {}, 
-    ((this.pagetext.length == 0)?('[click here to edit page text]'):(this.pagetext)));
-  div.innerHTML = div.innerHTML + ((this.inherittext && !this.isRoot())?(' (inherited)'):(""))
-  var cmts = vbd.makeElement('small', {style:'color: #666666'}, 
-    ((this.comments.length == 0)?('[click here to edit comments]'):(this.comments)));
-  div.onclick = function() {
-    var edit = vbd.makeElement('textarea', {rows:10});
-    edit.value = self.pagetext;
-    self.formspan.innerHTML = 'Enter some text for the page:';
-    self.formspan.appendChild(edit);
-    if(!self.isRoot()) {
-      var inherit = vbd.makeElement('input', {type:"checkbox"});
-      inherit.checked = self.inherittext;
-      vbd.appendChildren(self.formspan, [inherit, 'inherit text from parent?']);
+    var self = this;
+    var div = vbd.makeElement('small', {},
+        ((this.pagetext.length == 0) ? '[click here to edit page text]' : this.pagetext));
+    div.innerHTML = div.innerHTML + ((this.inherittext && !this.isRoot())?(' (inherited)'):(""))
+    var cmts = vbd.makeElement('small', {style:'color: #666666'},
+        ((this.comments.length == 0) ? '[click here to edit comments]' : this.comments));
+    div.onclick = function() {
+        var edit = vbd.makeElement('textarea', {rows:10});
+        edit.value = self.pagetext;
+        self.formspan.innerHTML = 'Enter some text for the page:';
+        self.formspan.appendChild(edit);
+        if(!self.isRoot()) {
+            var inherit = vbd.makeElement('input', {type:"checkbox"});
+            inherit.checked = self.inherittext;
+            vbd.appendChildren(self.formspan, [inherit, 'inherit text from parent?']);
+        }
+        self.formspan.appendChild(vbd.makeButton('', 'Save', function() {
+            if(!self.isRoot())
+                self.inherittext = inherit.checked;
+            self.pagetext = edit.value;
+            if(self.pagetext.match(/^\s*$/))
+                self.pagetext = "";
+            self.formspan.innerHTML = "";
+            vbd.visual();
+        }));
+        self.closeButton();
+        edit.focus();
     }
-    self.formspan.appendChild(vbd.makeButton('', 'Save', function() {
-      if(!self.isRoot()) self.inherittext = inherit.checked;
-      self.pagetext = edit.value;
-      if(self.pagetext.match(/^\s*$/)) self.pagetext = "";
-      self.formspan.innerHTML = "";
-      vbd.visual();
-    }));
-    self.closeButton();
-    edit.focus(); 
-  }
-  div.style.cursor = "pointer";
-  cmts.onclick = function() {
-    var edit = vbd.makeElement('textarea', {rows:10});
-    edit.value = self.comments;
-    self.formspan.innerHTML = 'Enter some comments:';
-    self.formspan.appendChild(edit);
-    self.formspan.appendChild(vbd.makeButton('', 'Save', function() {
-      self.comments = edit.value;
-      if(self.comments.match(/^\s*$/)) self.comments = "";
-      self.formspan.innerHTML = "";
-      vbd.visual();
-    }));
-    self.closeButton();
-    edit.focus(); 
-  }
-  cmts.style.cursor = "pointer";
-  return vbd.makeElement('table', {width:"100%", style:"background-color: transparent"}, [
-    vbd.makeElement('td', {width:"50%", style:"padding-left: 2em;"}, div),
-    vbd.makeElement('td', {style:"padding-left: 2em;"}, cmts)
-  ]);
+    div.style.cursor = "pointer";
+    cmts.onclick = function() {
+        var edit = vbd.makeElement('textarea', {rows:10});
+        edit.value = self.comments;
+        self.formspan.innerHTML = 'Enter some comments:';
+        self.formspan.appendChild(edit);
+        self.formspan.appendChild(vbd.makeButton('', 'Save', function() {
+            self.comments = edit.value;
+            if(self.comments.match(/^\s*$/))
+                self.comments = "";
+            self.formspan.innerHTML = "";
+            vbd.visual();
+        }));
+        self.closeButton();
+        edit.focus();
+    }
+    cmts.style.cursor = "pointer";
+    return vbd.makeElement('table', {width:"100%", style:"background-color: transparent"}, [
+        vbd.makeElement('td', {width:"50%", style:"padding-left: 2em;"}, div),
+        vbd.makeElement('td', {style:"padding-left: 2em;"}, cmts)
+    ]);
 }
 
 //remove a subpage
 BookPage.prototype.removeSubpage = function(subpage) {
-  for(var i = 0; i < this.subpages.length; i++) {
-    if(this.subpages[i] != subpage) continue;
-    this.subpages.splice(i, 1);
-    return;
-  }
+    for(var i = 0; i < this.subpages.length; i++) {
+        if(this.subpages[i] != subpage)
+            continue;
+        this.subpages.splice(i, 1);
+        return;
+    }
 }
 
 //remove a heading
 BookPage.prototype.removeHeading = function(heading) {
-  for(var i = 0; i < this.headings.length; i++) {
-    if(this.headings[i] != heading) continue;
-    this.headings.splice(i, 1);
-    return;
-  }
+    for(var i = 0; i < this.headings.length; i++) {
+        if(this.headings[i] != heading)
+            continue;
+        this.headings.splice(i, 1);
+        return;
+    }
 }
 
 //create a link to modify the list of headings.
 BookPage.prototype.makeHeadingsLink = function () {
-  var link = vbd.makeElement('a', null, ['Headings for this page']);
-  var self = this;
-  link.onclick = function() {
-    var text = "";
-    for(var i = 0; i < self.headings.length; i++) {
-      text = text + self.headings[i].label + "\n";
+    var link = vbd.makeElement('a', null, ['Headings for this page']);
+    var self = this;
+    link.onclick = function() {
+        var text = "";
+        for(var i = 0; i < self.headings.length; i++)
+            text = text + self.headings[i].label + "\n";
+        var old = vbd.CopyArray(self.headings);
+        var edit = vbd.makeElement('textarea', {rows:10, cols:50});
+        edit.value = text;
+        self.formspan.innerHTML = "";
+        self.formspan.appendChild(document.createTextNode(
+            'Enter the names of all headings, one per line'));
+        self.formspan.appendChild(edit);
+        self.formspan.appendChild(vbd.makeButton('', 'Save these headings', function() {
+            self.headings.length = 0;
+            var pages = edit.value.split("\n");
+            for(var i = 0; i < pages.length; i++) {
+                if(pages[i].match(/^\s*$/))
+                    continue;
+                var stat = vbd.FindHeadNameInArray(old, pages[i]);
+                if(stat != -1)
+                    self.addHeading(old[stat]);
+                else
+                    self.addHeading(new PageHeading(vbd.forceFirstCaps(pages[i])));
+            }
+            self.formspan.innerHTML = "";
+            vbd.visual();
+        }));
+        self.closeButton();
+        edit.focus();
     }
-    var old = vbd.CopyArray(self.headings);
-    var edit = vbd.makeElement('textarea', {rows:10, cols:50});
-    edit.value = text;
-    self.formspan.innerHTML = "";
-    self.formspan.appendChild(document.createTextNode(
-      'Enter the names of all headings, one per line'));
-    self.formspan.appendChild(edit);
-    self.formspan.appendChild(vbd.makeButton('', 'Save these headings', function() {
-      self.headings.length = 0;
-      var pages = edit.value.split("\n");
-      for(var i = 0; i < pages.length; i++) {
-        if(pages[i].match(/^\s*$/)) continue;
-        var stat = vbd.FindHeadNameInArray(old, pages[i]);
-        if(stat != -1) {
-          self.addHeading(old[stat]);
-        } else {
-          self.addHeading(new PageHeading(vbd.forceFirstCaps(pages[i])));
-        }
-      }
-      self.formspan.innerHTML = "";
-      vbd.visual();
-    }));
-    self.closeButton();
-    edit.focus();
-  }
-  return(link);
+    return(link);
 }
 
 //create a link to add a new subpage
 BookPage.prototype.makeSubpagesAddLink = function () {
-  var link = vbd.makeElement('a', null, [" [ + ]"]);
-  var self = this;
-  link.onclick = function () {
-    self.addSubpage(new BookPage(vbd.defpagename + " " + vbd.newpagecnt));
-    vbd.newpagecnt++;
-    vbd.visual();
-  }
-  return link;
+    var link = vbd.makeElement('a', null, [" [ + ]"]);
+    var self = this;
+    link.onclick = function () {
+        self.addSubpage(new BookPage(vbd.defpagename + " " + vbd.newpagecnt));
+        vbd.newpagecnt++;
+        vbd.visual();
+    }
+    return link;
 }
 
 //create a link to add a new heading
 BookPage.prototype.makeHeadingsAddLink = function () {
-  var link = vbd.makeElement('a', null, [" [ + ]"]);
-  var self = this;
-  link.onclick = function () {
-    self.addHeading(new PageHeading(vbd.defheadname + " " + vbd.newheadcnt));
-    vbd.newheadcnt++;
-    vbd.visual();
-  }
-  return link;
+    var link = vbd.makeElement('a', null, [" [ + ]"]);
+    var self = this;
+    link.onclick = function () {
+        self.addHeading(new PageHeading(vbd.defheadname + " " + vbd.newheadcnt));
+        vbd.newheadcnt++;
+        vbd.visual();
+    }
+    return link;
 }
 
 //make a list to modify the list of subpages
@@ -209,7 +213,7 @@ BookPage.prototype.makeSubpagesLink = function () {
 BookPage.prototype.getTitleNode = function () {
   var self = this;
   var container = vbd.makeElement('span');
-  var collapse = vbd.makeElement('small', null, 
+  var collapse = vbd.makeElement('small', null,
     ((this.collapse == 0)?('[-] '):('[+] ')));
   collapse.style.cursor = "pointer";
   collapse.onclick = function () {
@@ -224,7 +228,7 @@ BookPage.prototype.getTitleNode = function () {
     vbd.appendChildren(self.formspan, ['Enter the new name: ', edit, vbd.makeButton('', 'Accept', function() {
       self.formspan.innerHTML = "Renaming...";
       var pagename = vbd.forceCaps(edit.value, self.isRoot());
-      if(self.isRoot()) vbd.loadWikiText(pagename, function (text) { 
+      if(self.isRoot()) vbd.loadWikiText(pagename, function (text) {
         if(text.length != 0) self.formspan.innerHTML = "<b>Warning:</b> " + pagename + " already exists. Check it before saving over it.";
         else self.formspan.innerHTML = "";
       });
@@ -234,7 +238,7 @@ BookPage.prototype.getTitleNode = function () {
     })]);
     if(!self.isRoot()) self.formspan.appendChild(vbd.makeButton('', 'Delete', function () {
       if(confirm("delete page '" + self.pagename + "'?")) {
-        if(self.parent2 == null) self.parent.removeSubpage(self); 
+        if(self.parent2 == null) self.parent.removeSubpage(self);
         else self.parent2.removeSubpage(self);
         vbd.visual();
       }
@@ -247,20 +251,23 @@ BookPage.prototype.getTitleNode = function () {
 }
 
 //functions for dealing with recursion
-BookPage.prototype.isRoot = function () { 
-  return (this.parent == null)?(1):(0);
+BookPage.prototype.isRoot = function () {
+    return (this.parent == null)?(1):(0);
 }
 BookPage.prototype.getFullName = function() {
-  if(this.isRoot()) return this.pagename;
-  return this.parent.getFullName() + "/" + this.pagename;
-} 
+    if(this.isRoot())
+        return this.pagename;
+    return this.parent.getFullName() + "/" + this.pagename;
+}
 BookPage.prototype.getDepth = function() {
-  if(this.isRoot()) return 0;
-  return this.parent.getDepth() + 1;
+    if(this.isRoot())
+        return 0;
+    return this.parent.getDepth() + 1;
 }
 BookPage.prototype.getBookName = function () {
-  if(this.isRoot()) return this.pagename;
-  return this.parent.getBookName();
+    if(this.isRoot())
+        return this.pagename;
+    return this.parent.getBookName();
 }
 
 //make wikitext of a page, using nested asterisks, as required
@@ -295,12 +302,13 @@ BookPage.prototype.makeTemplateLinks = function () {
 
 //make a link for a page without nested asterisks
 BookPage.prototype.makeWikitextLink = function () {
-  return "*[[" + this.getFullName() + "|" + this.pagename + "]]";
+    return "*[[" + this.getFullName() + "|" + this.pagename + "]]";
 }
 
 BookPage.prototype.getPageText = function() {
-  if(!this.inherittext || this.isRoot()) return this.pagetext;
-  return this.parent.getPageText() + "\n" + this.pagetext;
+    if(!this.inherittext || this.isRoot())
+        return this.pagetext;
+    return this.parent.getPageText() + "\n" + this.pagetext;
 }
 
 //make the wikitext of an entire page
@@ -366,14 +374,15 @@ BookPage.prototype.makePrintVersionRoot = function() {
 
 //make the print version text of a subpage
 BookPage.prototype.makePrintVersionText = function () {
-  return "{{Print chapter heading|" + this.pagename + "}}\n" + 
-    "{{:" + this.getFullName() + "}}\n\n";
+    return "{{Print chapter heading|" + this.pagename + "}}\n" +
+        "{{:" + this.getFullName() + "}}\n\n";
 }
 
 //make the wikitext for any page
 BookPage.prototype.makeWikitextAll = function()  {
-  if(this.isRoot()) return this.makeWikitextRoot();
-  return this.makeWikitextPage();
+    if(this.isRoot())
+        return this.makeWikitextRoot();
+    return this.makeWikitextPage();
 }
 
 //make a link to view the wikitext of the current page
@@ -414,10 +423,10 @@ BookPage.prototype.makeCollectionText = function (subt) {
 
 //make a button to close an open formspan
 BookPage.prototype.closeButton = function () {
-  var self = this;
-  this.formspan.appendChild(vbd.makeButton('', 'Close', function() {
-    self.formspan.innerHTML = "";
-  }));  
+    var self = this;
+    this.formspan.appendChild(vbd.makeButton('', 'Close', function() {
+        self.formspan.innerHTML = "";
+    }));
 }
 
 //add all subpages of the current page to list
@@ -440,12 +449,12 @@ BookPage.prototype.listAllSubpages = function(list) {
 
 //make a link to edit the text of the page
 BookPage.prototype.makeEditLink = function () {
-  var link = vbd.makeElement('a', null, ['Edit']);
-  var self = this;
-  link.onclick = function() {
-    self.makeEditInterface(self.getFullName(), self.makeWikitextAll(), self.pagename + ": Created by Whiteknight's Visual Book Designer");
-  }
-  return(link);
+    var link = vbd.makeElement('a', null, ['Edit']);
+    var self = this;
+    link.onclick = function() {
+        self.makeEditInterface(self.getFullName(), self.makeWikitextAll(), self.pagename + ": Created by Whiteknight's Visual Book Designer");
+    }
+    return(link);
 }
 
 //make a link to load the TOC from an existing book
@@ -459,7 +468,7 @@ BookPage.prototype.makeLoadTOCLink = function () {
     self.formspan.appendChild(edit);
     self.formspan.appendChild(vbd.makeButton('', 'Load', function() {
       page = edit.value;
-      vbd.loadWikiText(page, function (text) { 
+      vbd.loadWikiText(page, function (text) {
         vbd.loadNodeTreeTOC(text, page);
       });
     }));
@@ -480,7 +489,7 @@ BookPage.prototype.makeSaveCollectionLink = function (key) {
     var edit = vbd.makeElement('input', {type:'text', value:page, size:50});
     self.formspan.innerHTML = "";
     vbd.appendChildren(self.formspan, ["Enter a subtitle for the book: ", subt,
-      vbd.makeElement('br'), 
+      vbd.makeElement('br'),
       'Enter the ' + key + ' collection name to save at: ', edit]);
     self.formspan.appendChild(vbd.makeButton('', 'Save', function() {
       self.makeEditInterface(edit.value, self.makeCollectionText(subt.value), ": Saving " + key + " collection");
@@ -502,7 +511,7 @@ BookPage.prototype.makeLoadCollectionLink = function (type) {
     self.formspan.innerHTML = "";
     vbd.appendChildren(self.formspan, ["Enter the name of the " + type + " collection to load: ", edit,
       vbd.makeButton('', 'Load', function () {
-        vbd.loadWikiText(page + edit.value, function (text) { 
+        vbd.loadWikiText(page + edit.value, function (text) {
           vbd.loadNodeTreeCollection(text, page);
         });
       })
@@ -513,8 +522,8 @@ BookPage.prototype.makeLoadCollectionLink = function (type) {
 
 //make the text for a heading template
 BookPage.prototype.makeTemplate = function () {
-  var self = this;
-  self.makeEditInterface("Template:" + this.pagename + "/Page", vbd.makeTemplateText(), self.pagename + ": Creating page head template");
+    var self = this;
+    self.makeEditInterface("Template:" + this.pagename + "/Page", vbd.makeTemplateText(), self.pagename + ": Creating page head template");
 }
 
 //prepare the text to save a subpage from the outline.

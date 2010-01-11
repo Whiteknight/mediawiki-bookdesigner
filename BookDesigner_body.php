@@ -222,7 +222,7 @@ EOD;
     </div>
     <div id="VBDStatSpan"></div>
     <div id="VBDInstructionSpan">
-        <b>Quick Start Instructions</b>
+        <h2>Quick Start Instructions</h2>
         <ol>
             <li>Click the title of a book to rename it<br>Click "<b>New Book</b>" to give your book a name</li>
             <li>Click "Headings for this page" to add sections to the page<br>Click the <b>[ + ]</b> To add 1 new section</li>
@@ -232,19 +232,23 @@ EOD;
     </div>
     <div id="VBDOptionsSpan">
         <h2>Options</h2>
+        <b>Book Options</b><br>
+        <input type="checkbox" name="optUseNamespace">Use Alternate Namespace:</input><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" name="optNamespace"/><br>
+        <input type="checkbox" name="optUseUserSpace" disabled>Create in User Space</input><br>
+        <input type="checkbox" name="optIntroductionPage" disabled>Create Introduction Page</input><br>
+        <input type="checkbox" name="optResourcesPage" disabled>Create Resources Page</input><br>
+        <input type="checkbox" name="optLicensingPage" disabled>Create Licensing Page</input><br>
+
+        <b>Page Options</b><br>
         <input type="checkbox" name="optCreateLeaves" checked>Create Leaf Pages</input><br>
         <input type="checkbox" name="optNumberPages">Number Pages</input><br>
+
+        <b>Template Options</b><br>
         <input type="checkbox" name="optHeaderTemplate" checked>Use Header Template</input><br>
         <input type="checkbox" name="optAutogenTemplate">Autogenerate Header Template</input><br>
         <!-- TODO: Add a <select> item here with a list of auto-generate template styles -->
-        <input type="checkbox" name="optUseNamespace">Use Alternate Namespace:</input>&nbsp;<input type="text" name="optNamespace"/><br>
 
-        <!-- These are TODO Options -->
-        <input type="checkbox" name="optUseUserSpace" disabled>Create in user space</input><br>
-        Create Pages:
-        <input type="checkbox" name="optIntroductionPage" disabled>Introduction Page</input> &mdash;
-        <input type="checkbox" name="optResourcesPage" disabled>Resources Page</input> &mdash;
-        <input type="checkbox" name="optLicensingPage" disabled>Licensing Page</input>
     </div>
     <div id="VBDOutlineSpan">
         JavaScript is not working, or designer.js could not be found. Make sure to enable JavaScript in your browser, and
