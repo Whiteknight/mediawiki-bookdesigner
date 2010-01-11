@@ -178,6 +178,10 @@ EOD;
         $this->_dbgl("Autogenerate Template: " . ($this->autogenemp ? "1" : "0"));
     }
 
+    function GetMessage($msgname) {
+        return wfMsg('bookdesigner-' . $msgname);
+    }
+
     // Main function, this is where execution starts
     function execute( $par ) {
         global $wgRequest, $wgOut, $wgScriptPath;
@@ -218,53 +222,49 @@ EOD;
 <form action="{$this->pageprefix}Special:BookDesigner" method="POST">
     <textarea name="VBDHiddenTextArea" id="VBDHiddenTextArea" style="display: none;"></textarea>
     <div id="VBDWelcomeSpan">
-        This is the <b>Visual Book Design</b> outlining tool. Use this page to create an outline for your new book.
+        {$this->GetMessage('welcome')}
     </div>
     <div id="VBDStatSpan"></div>
     <div id="VBDInstructionSpan">
-        <h2>Quick Start Instructions</h2>
-        <ol>
-            <li>Click the title of a book to rename it<br>Click "<b>New Book</b>" to give your book a name</li>
-            <li>Click "Headings for this page" to add sections to the page<br>Click the <b>[ + ]</b> To add 1 new section</li>
-            <li>Click "Subpages" to create new pages in the book here<br>Click the <b>[ + ]</b> to add 1 new subpage</li>
-            <li>When you are finished, click <b>Publish Book!</b> to create the book
-        </ol>
+        <h2>{$this->GetMessage('qsistart')}</h2>
+        {$this->GetMessage('qsi')}
     </div>
     <div id="VBDOptionsSpan">
         <h2>
             <span style="float: right; font-size: 67%;">
-                [<a id="VBDOptionsToggle" onclick="vbd.ToggleOptions();">Show</a>]
+                [<a id="VBDOptionsToggle" onclick="vbd.ToggleOptions();">
+                    {$this->GetMessage('show')}
+                </a>]
             </span>
-            Options
+            {$this->GetMessage('options')}
         </h2>
         <div id="VBDOptionsInternal" style="display: none;">
-            <b>Book Options</b><br>
-            <input type="checkbox" name="optUseNamespace">Use Alternate Namespace:</input><br>
+            <b>{$this->GetMessage('optsbook')}</b><br>
+            <input type="checkbox" name="optUseNamespace">{$this->GetMessage('optusenamespace')}:</input><br>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" name="optNamespace"/><br>
-            <input type="checkbox" name="optUseUserSpace" disabled>Create in User Space</input><br>
-            <input type="checkbox" name="optIntroductionPage" disabled>Create Introduction Page</input><br>
-            <input type="checkbox" name="optResourcesPage" disabled>Create Resources Page</input><br>
-            <input type="checkbox" name="optLicensingPage" disabled>Create Licensing Page</input><br>
+            <input type="checkbox" name="optUseUserSpace" disabled>{$this->GetMessage('optuseuserspace')}</input><br>
+            <input type="checkbox" name="optIntroductionPage" disabled>{$this->GetMessage('optintroductionpage')}</input><br>
+            <input type="checkbox" name="optResourcesPage" disabled>{$this->GetMessage('optresourcespage')}</input><br>
+            <input type="checkbox" name="optLicensingPage" disabled>{$this->GetMessage('optlicensingpage')}</input><br>
 
-            <b>Page Options</b><br>
-            <input type="checkbox" name="optCreateLeaves" checked>Create Leaf Pages</input><br>
-            <input type="checkbox" name="optNumberPages">Number Pages</input><br>
+            <b>{$this->GetMessage('optspage')}</b><br>
+            <input type="checkbox" name="optCreateLeaves" checked>{$this->GetMessage('optcreateleaf')}</input><br>
+            <input type="checkbox" name="optNumberPages">{$this->GetMessage('optnumberpages')}</input><br>
 
-            <b>Template Options</b><br>
-            <input type="checkbox" name="optHeaderTemplate" checked>Use Header Template</input><br>
-            <input type="checkbox" name="optAutogenTemplate">Autogenerate Header Template</input><br>
+            <b>{$this->GetMessage('optstemplate')}</b><br>
+            <input type="checkbox" name="optHeaderTemplate" checked>{$this->GetMessage('optheadertemplate')}</input><br>
+            <input type="checkbox" name="optAutogenTemplate">{$this->GetMessage('optautogentemplate')}</input><br>
             <!-- TODO: Add a <select> item here with a list of auto-generate template styles -->
         </div>
     </div>
     <div id="VBDOutlineSpan">
-        JavaScript is not working, or designer.js could not be found. Make sure to enable JavaScript in your browser, and
-        contact your wiki site administrator.
+        {$this->GetMessage('jserror')}
     </div>
-    <input type="submit" value="Publish Book!"/><br>
+    <input type="submit" value="{$this->GetMessage('publishbutton')}"/><br>
     <!--
     TODO: This is a temporary addition to aid in debugging. It shows the intermediate code before it's transmitted to the
           server. This way if there is some kind of a server error, we can save a copy of that intermediate code to a safe place
-          so when we are making a hugeo outline we don't lose all that work.
+          so when we are making a hugeo outline we don't lose all that work. No i18n for debug stuff.
     -->
     <small>
         <a href="#" onclick="document.getElementById('VBDHiddenTextArea').style.display = 'block';">Show Intermediate Code</a>

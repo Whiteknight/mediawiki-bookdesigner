@@ -13,5 +13,37 @@ of the UI, we can insert string constants directly.
 $messages['en'] = array(
 	'bookdesigner' => 'Book Designer',
 	'bookdesigner-desc' => "Design and create books",
+        'bookdesigner-welcome' => "This is the <b>Visual Book Design</b> outlining tool. Use this page to create an outline for your new book.",
+        'bookdesigner-qsistart' => "Quick Start Instructions",
+        'bookdesigner-qsi' => <<< EOQSI
+        <ol>
+            <li>Click the title of a book to rename it<br>Click "<b>New Book</b>" to give your book a name</li>
+            <li>Click "Headings for this page" to add sections to the page<br>Click the <b>[ + ]</b> To add 1 new section</li>
+            <li>Click "Subpages" to create new pages in the book here<br>Click the <b>[ + ]</b> to add 1 new subpage</li>
+            <li>When you are finished, click <b>Publish Book!</b> to create the book
+        </ol>
+EOQSI
+        ,
+        'bookdesigner-show' => 'show',
+        'bookdesigner-options' => 'Options',
+        'bookdesigner-optsbook' => 'Book Options',
+        'bookdesigner-optusenamespace' => 'Use Alternate Namespace',
+        'bookdesigner-optuseuserspace' => 'Create In User Namespace',
+        'bookdesigner-optintroductionpage' => 'Create Introduction Page',
+        'bookdesigner-optresourcespage' => 'Create Resources Page',
+        'bookdesigner-optlicensingpage' => 'Create Licensing Page',
+        'bookdesigner-optspage' => 'Page Options',
+        'bookdesigner-optcreateleaf' => 'Create Leaf Pages',
+        'bookdesigner-optnumberpages' => 'Number Pages',
+        'bookdesigner-optstemplate' => 'Template Options',
+        'bookdesigner-optheadertemplate' => 'Include Header Template',
+        'bookdesigner-optautogentemplate' => 'Autogenerate Header Template',
+        'bookdesigner-publishbutton' => 'Publish Book!',
+
+        'bookdesigner-jserror' => <<<EOJSERROR
+JavaScript is not working, or designer.js could not be found.
+Make sure to enable JavaScript in your browser, and contact your wiki site administrator.
+EOJSERROR
+        ,
 );
 
