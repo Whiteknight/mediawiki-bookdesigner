@@ -192,6 +192,9 @@ EOD;
         if(method_exists($wgOut, "addExtensionStyle")) {
             $wgOut->addExtensionStyle($csspath . "/designer.css");
         } else {
+            // This is a hack for older MediaWiki (1.14 and below?).
+            // addStyle prepends "$wgScriptPath/skins/" to the front,
+            // so we need to navigate to the correct place
             $wgOut->addStyle("../extensions/BookDesigner/designer.css");
         }
 
