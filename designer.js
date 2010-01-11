@@ -16,6 +16,8 @@ var vbd = {
     //div IDs where the gadget is inserted into the page
     formspan: "VBDOutlineSpan",
     statspan: "VBDStatSpan",
+    optsspan: "VBDOptionsInternal",
+    optslink: "VBDOptionsToggle",
 
     // Navigation templates and configuration parameters
     templates: new Array(
@@ -40,89 +42,85 @@ var vbd = {
 //Basic array management functions
 vbd.CopyArray = function(array) { return array.slice(0); }
 vbd.FindPageNameInArray = function (array, name) {
-  for(var i = 0; i < array.length; i++) {
-    if(array[i].pagename == name) return i;
-  }
-  return -1;
+    for(var i = 0; i < array.length; i++)
+        if(array[i].pagename == name)
+            return i;
+    return -1;
 }
 vbd.FindHeadNameInArray = function(array, name) {
-  for(var i = 0; i < array.length; i++) {
-    if(array[i].label == name) return i;
-  }
-  return -1;
+    for(var i = 0; i < array.length; i++)
+        if(array[i].label == name)
+            return i;
+    return -1;
 }
 
 //Make a checkbox that corresponds to a boolean flag in vbd
 vbd.makeOptionsCheckbox = function (field) {
-  var cbox = vbd.makeElement('input', {type: "checkbox"});
-  cbox.checked = vbd[field];
-  cbox.onclick = function () { vbd[field] = cbox.checked; }
-  return cbox;
+    var cbox = vbd.makeElement('input', {type: "checkbox"});
+    cbox.checked = vbd[field];
+    cbox.onclick = function () { vbd[field] = cbox.checked; }
+    return cbox;
 }
 
-//Initialize
-//$(document).ready(function () {
-//  vbd.pageTree = new BookPage(vbd.defName);
-//  vbd.visual();
-//});
 addOnloadHook(function() {
     vbd.pageTree = new BookPage(vbd.defName);
     vbd.visual();
 });
 
 vbd.spanText = function(spanid, txt) {
-  var item;
-  if(typeof spanid == "string")
-    item = document.getElementById(spanid);
-  else
-    item = spanid;
-  if(txt != null)
-    item.innerHTML = txt;
-  return item;
+    var item;
+    if(typeof spanid == "string")
+        item = document.getElementById(spanid);
+    else
+        item = spanid;
+    if(txt != null)
+        item.innerHTML = txt;
+    return item;
 }
 
 //rebuild the outline
 vbd.visual = function() {
-  vbd.box = vbd.spanText(vbd.formspan, "");
-  if(vbd.box == null) return;
-  vbd.box.appendChild(vbd.pageTree.makeNode());
-  vbd.updateSerializeData();
+    vbd.box = vbd.spanText(vbd.formspan, "");
+    if(vbd.box == null)
+        return;
+    vbd.box.appendChild(vbd.pageTree.makeNode());
+    vbd.updateSerializeData();
 }
 
 //Clear the outline completely and create a new one
 vbd.clear = function() {
-  vbd.pageTree = new BookPage(vbd.defName);
-  vbd.subjects = new Array();
-  vbd.readingLevel = 2;
-  vbd.newpagecnt = 1;
-  vbd.newheadcnt = 1;
-  vbd.visual();
+    vbd.pageTree = new BookPage(vbd.defName);
+    vbd.subjects = new Array();
+    vbd.readingLevel = 2;
+    vbd.newpagecnt = 1;
+    vbd.newheadcnt = 1;
+    vbd.visual();
 }
 
 //Try to load in a saved collection
 vbd.loadNodeTreeCollection = function(text) {
-  vbd.clear();
-  var last = vbd.pageTree;
-  var lines = text.split("\n");
-  for(var i = 0; i < lines.length; i++) {
-    if(lines[i].match(/^===/) || lines[i].match(/\[\[category:/i)) {
-      continue;
-    } else if(lines[i].match(/^==.+==/)) {
-      vbd.pageTree.pagename = vbd.extractHeadingName(lines[i]);
-    } else if(lines[i].match(/^;/)) {
-      var head = new PageHeading(lines[i].substring(1));
-      last.addHeading(head);
-      last = head;
-    } else if(lines[i].match(/^:\[\[/)) {
-      if(lines[i].match(/Resources/)) { vbd.useresources = true; continue; }
-      if(lines[i].match(/Licensing/)) { vbd.uselicensing = true; continue; }
-      if(lines[i].match(/Wikibooks:/)) { vbd.usecollectionpreface = true; continue; }
-      var page = new BookPage(vbd.extractLinkPageName(lines[i], vbd.pageTree.pagename));
-      last.addSubpage(page);
+    vbd.clear();
+    var last = vbd.pageTree;
+    var lines = text.split("\n");
+    for(var i = 0; i < lines.length; i++) {
+        if(lines[i].match(/^===/) || lines[i].match(/\[\[category:/i)) {
+            continue;
+        } else if(lines[i].match(/^==.+==/)) {
+            vbd.pageTree.pagename = vbd.extractHeadingName(lines[i]);
+        } else if(lines[i].match(/^;/)) {
+            var head = new PageHeading(lines[i].substring(1));
+            last.addHeading(head);
+            last = head;
+        } else if(lines[i].match(/^:\[\[/)) {
+            if(lines[i].match(/Resources/)) { vbd.useresources = true; continue; }
+            if(lines[i].match(/Licensing/)) { vbd.uselicensing = true; continue; }
+            if(lines[i].match(/Wikibooks:/)) { vbd.usecollectionpreface = true; continue; }
+            var page = new BookPage(vbd.extractLinkPageName(lines[i], vbd.pageTree.pagename));
+            last.addSubpage(page);
+        }
     }
-  }
-  vbd.visual();
-  vbd.pageTree.formspan.innerHTML = 'Successfully loaded collection!';
+    vbd.visual();
+    vbd.pageTree.formspan.innerHTML = 'Successfully loaded collection!';
 }
 
 //take the wikitext of an arbitrary page and try to load a reasonable outline from it.
@@ -188,29 +186,30 @@ vbd.extractLinkPageName = function(line, title) {
 
 //force a page name to use appropriate capitalization
 vbd.forceCaps = function(title, isRoot) {
-  if(isRoot) return vbd.forceTitleCaps(title);
-  else return vbd.forceFirstCaps(title);
+    if(isRoot)
+        return vbd.forceTitleCaps(title);
+    else
+        return vbd.forceFirstCaps(title);
 }
 
 //determines if the word needs to be capitalized. Returns 1 if it should be, 0 otherwise.
 vbd.isRealWord = function (word) {
-  var preps = new Array('the', 'in', 'of', 'for', 'to', 'is', 'a', 'an');
-  for(var i = 0; i < preps.length; i++) {
-    if(word == preps[i]) return 0;
-  }
-  return 1;
+    var preps = new Array('the', 'in', 'of', 'for', 'to', 'is', 'a', 'an');
+    for(var i = 0; i < preps.length; i++)
+        if(word == preps[i])
+            return 0;
+    return 1;
 }
 
 //book names are forced to title caps
 vbd.forceTitleCaps = function(title) {
-  title.replace("_", " ");
-  var words = title.split(" ");
-  for(var i = 0; i < words.length; i++) {
-    if(words[i].length > 3 || i == 0 || vbd.isRealWord(words[i]))
-      words[i] = words[i].charAt(0).toUpperCase() + words[i].slice(1);
-  }
-  title = words.join(" ");
-  return title;
+    title.replace("_", " ");
+    var words = title.split(" ");
+    for(var i = 0; i < words.length; i++)
+        if(words[i].length > 3 || i == 0 || vbd.isRealWord(words[i]))
+            words[i] = words[i].charAt(0).toUpperCase() + words[i].slice(1);
+    title = words.join(" ");
+    return title;
 }
 
 //page names are forced to have the first letter capitalized, but are not forced to have title-caps
@@ -270,11 +269,13 @@ vbd.appendChildren = function(parent, children) {
     if(res == null) return;
     if(children instanceof Array) {
         for(var i = 0; i < children.length; i++) {
-            if(typeof children[i] == 'string') children[i] = document.createTextNode(children[i]);
+            if(typeof children[i] == 'string')
+                children[i] = document.createTextNode(children[i]);
             res.appendChild(children[i]);
         }
     } else {
-        if(typeof children == 'string') children[i] = document.createTextNode(children);
+        if(typeof children == 'string')
+            children[i] = document.createTextNode(children);
         res.appendChild(children);
     }
 }
@@ -306,15 +307,15 @@ vbd.showEditWindowExternal = function(page, text, summary) {
         w.document.addEventListener("load", function() { loadwin(w, out) }, false);
 }
 
-vbd.showEditWindowInline = function(bookpage, parentspan, page, deftext, defsummary) {
-    if(typeof parentspan == "string")
-        $("#" + parentspan).load(vbd._editURL + " #editform");
-    else
-        $(parentspan).load(vbd._editURL + " #editform");
-    $("#Textbox1").value(deftext);
-    $("#wpSummary").value(defsummary);
-    bookpage.closeButton();
-}
+//vbd.showEditWindowInline = function(bookpage, parentspan, page, deftext, defsummary) {
+//    if(typeof parentspan == "string")
+//        $("#" + parentspan).load(vbd._editURL + " #editform");
+//    else
+//        $(parentspan).load(vbd._editURL + " #editform");
+//    $("#Textbox1").value(deftext);
+//    $("#wpSummary").value(defsummary);
+//    bookpage.closeButton();
+//}
 
 vbd._rawURL = function(page) {
     return vbd._URLBase + page.replace(/ /g, "_") + "&action=raw&ctype=text/x-wiki";
@@ -333,7 +334,8 @@ vbd._initclient = function() {
         try {
            var method = vbd._httpmethods[i];
             var client = method();
-            if(client != null) vbd._httpmethod = method;
+            if(client != null)
+                vbd._httpmethod = method;
             return client;
         } catch(e) { continue; }
     }
@@ -341,22 +343,30 @@ vbd._initclient = function() {
 }
 
 vbd.httpClient = function() {
-    if(vbd._httpmethod != null) return vbd._httpmethod();
-    if(vbd._initclient() == null) return null;
+    if(vbd._httpmethod != null)
+        return vbd._httpmethod();
+    if(vbd._initclient() == null)
+        return null;
     return vbd._httpmethod();
 }
 
 vbd.loadPage = function(url, callback, type) {
-    if(callback == null || url == null) return false;
+    if(callback == null || url == null)
+        return false;
     var client = vbd.httpClient();
     client.onreadystatechange = function() {
-        if(client.readyState != 4) return;
-        if(type == "text/xml" && client.overrideMimeType) callback(client.responseXML);
-        else if(client.status == 200) callback(client.responseText);
-        else callback('');
+        if(client.readyState != 4)
+            return;
+        if(type == "text/xml" && client.overrideMimeType)
+            callback(client.responseXML);
+        else if(client.status == 200)
+            callback(client.responseText);
+        else
+            callback('');
     }
     client.open("GET", url, true);
-    if(type == "text/xml" && client.overrideMimeType) client.overrideMimeType(type);
+    if(type == "text/xml" && client.overrideMimeType)
+        client.overrideMimeType(type);
     client.send(null);
     return true;
 }
@@ -365,5 +375,12 @@ vbd.loadWikiText = function(page, callback) {
     return vbd.loadPage(vbd._rawURL(page), callback, "text/x-wiki");
 }
 
+vbd.ToggleOptions = function() {
+    var span = document.getElementById(vbd.optsspan);
+    var state = span.style.display;
+    span.style.display = (state == "none") ? "block" : "none";
+    var link = document.getElementById(vbd.optslink);
+    link.innerHTML = (state == "none") ? "Hide" : "Show";
+}
 
 

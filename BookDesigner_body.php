@@ -231,24 +231,30 @@ EOD;
         </ol>
     </div>
     <div id="VBDOptionsSpan">
-        <h2>Options</h2>
-        <b>Book Options</b><br>
-        <input type="checkbox" name="optUseNamespace">Use Alternate Namespace:</input><br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" name="optNamespace"/><br>
-        <input type="checkbox" name="optUseUserSpace" disabled>Create in User Space</input><br>
-        <input type="checkbox" name="optIntroductionPage" disabled>Create Introduction Page</input><br>
-        <input type="checkbox" name="optResourcesPage" disabled>Create Resources Page</input><br>
-        <input type="checkbox" name="optLicensingPage" disabled>Create Licensing Page</input><br>
+        <h2>
+            <span style="float: right; font-size: 67%;">
+                [<a id="VBDOptionsToggle" onclick="vbd.ToggleOptions();">Show</a>]
+            </span>
+            Options
+        </h2>
+        <div id="VBDOptionsInternal" style="display: none;">
+            <b>Book Options</b><br>
+            <input type="checkbox" name="optUseNamespace">Use Alternate Namespace:</input><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" name="optNamespace"/><br>
+            <input type="checkbox" name="optUseUserSpace" disabled>Create in User Space</input><br>
+            <input type="checkbox" name="optIntroductionPage" disabled>Create Introduction Page</input><br>
+            <input type="checkbox" name="optResourcesPage" disabled>Create Resources Page</input><br>
+            <input type="checkbox" name="optLicensingPage" disabled>Create Licensing Page</input><br>
 
-        <b>Page Options</b><br>
-        <input type="checkbox" name="optCreateLeaves" checked>Create Leaf Pages</input><br>
-        <input type="checkbox" name="optNumberPages">Number Pages</input><br>
+            <b>Page Options</b><br>
+            <input type="checkbox" name="optCreateLeaves" checked>Create Leaf Pages</input><br>
+            <input type="checkbox" name="optNumberPages">Number Pages</input><br>
 
-        <b>Template Options</b><br>
-        <input type="checkbox" name="optHeaderTemplate" checked>Use Header Template</input><br>
-        <input type="checkbox" name="optAutogenTemplate">Autogenerate Header Template</input><br>
-        <!-- TODO: Add a <select> item here with a list of auto-generate template styles -->
-
+            <b>Template Options</b><br>
+            <input type="checkbox" name="optHeaderTemplate" checked>Use Header Template</input><br>
+            <input type="checkbox" name="optAutogenTemplate">Autogenerate Header Template</input><br>
+            <!-- TODO: Add a <select> item here with a list of auto-generate template styles -->
+        </div>
     </div>
     <div id="VBDOutlineSpan">
         JavaScript is not working, or designer.js could not be found. Make sure to enable JavaScript in your browser, and
