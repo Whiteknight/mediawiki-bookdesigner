@@ -5,9 +5,6 @@ class BookDesigner extends SpecialPage {
         wfLoadExtensionMessages('BookDesigner');
     }
 
-    // Change this if the prefix is different on your system.
-    protected $pageprefix   = "/wiki/index.php?title=";
-
     // set this to true to enable debugging output.
     protected $debug        = false;
 
@@ -129,20 +126,20 @@ class BookDesigner extends SpecialPage {
             $title = Title::newFromText($path);
             $article = new Article($title);
             $article->doEdit($pagetext, "Creating new book automatically");
-            $wgOut->addHTML("Created <a href=\"" . $this->pageprefix . $path . "\">" . $path . "</a><br/>");
+            $wgOut->addHTML("Created <a href=\"$wgScriptPath/index.php?title=$path\">$path</a><br/>");
         }
         return $idx;
     }
 
     // Build the header template
     function generateHeaderTemplate( $bookname ) {
-        global $wgOut;
+        global $wgOut, $wgScriptPath;
         $name = "Template:" . $bookname;
         $title = Title::newFromText($name);
         $article = new Article($title);
         $text = $this->getTemplateText($bookname);
         $article->doEdit($text, "Creating header template for " . $bookname);
-        $wgOut->addHTML("Created <a href=\"" . $this->pageprefix . $name . "\">" . $name . "</a><br/>");
+        $wgOut->addHTML("Created <a href=\"$wgScriptPath/index.php?title=$name\">$name</a><br/>");
     }
 
     // Returns an EXTREMELY basic text string for creating a header template.
@@ -151,9 +148,7 @@ class BookDesigner extends SpecialPage {
         $text = <<<EOD
 
 <div style="border: 1px solid #AAAAAA; background-color: #F8F8F8; padding: 5px; margin: auto; width: 95%">
-    <center><big>
-        '''[[$bookname]]'''
-    </big></center>
+<center><big>'''[[$bookname]]'''</big></center>
 </div>
 
 EOD;
@@ -161,6 +156,7 @@ EOD;
     }
 
     function getOptions() {
+        global $wgRequest;
         $this->createleaves = $wgRequest->getCheck("optCreateLeaves");
         $this->_dbgl("Create leaves: " . ($this->createleaves ? "1" : "0"));
 
@@ -219,7 +215,7 @@ EOD;
         else {
             $text = <<<EOD
 
-<form action="{$this->pageprefix}Special:BookDesigner" method="POST">
+<form action="{$wgScriptPath}/index.php?title=Special:BookDesigner" method="POST">
     <textarea name="VBDHiddenTextArea" id="VBDHiddenTextArea" style="display: none;"></textarea>
     <div id="VBDWelcomeSpan">
         {$this->GetMessage('welcome')}
