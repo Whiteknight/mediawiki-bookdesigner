@@ -14,7 +14,7 @@ var vbd = {
     newheadcnt: 1,
 
     //div IDs where the gadget is inserted into the page
-    formspan: "VBDSpan",
+    formspan: "VBDOutlineSpan",
     statspan: "VBDStatSpan",
 
     // Navigation templates and configuration parameters

@@ -189,7 +189,11 @@ EOD;
         $wgOut->addScriptFile($jspath . "/bookpage.js");
         $wgOut->addScriptFile($jspath . "/pagehead.js");
         $wgOut->addScriptFile($jspath . "/designer.js");
-        $wgOut->addStyle($csspath . "/designer.css");
+        if(method_exists($wgOut, "addExtensionStyle")) {
+            $wgOut->addExtensionStyle($csspath . "/designer.css");
+        } else {
+            $wgOut->addStyle("../extensions/BookDesigner/designer.css");
+        }
 
         if(isset($par)) {
             // TODO: we've specified a book name, load that book into the outline
@@ -211,14 +215,13 @@ EOD;
         else {
             $text = <<<EOD
 
-
 <form action="{$this->pageprefix}Special:BookDesigner" method="POST">
     <textarea name="VBDHiddenTextArea" id="VBDHiddenTextArea" style="display: none;"></textarea>
     <div id="VBDWelcomeSpan">
         This is the <b>Visual Book Design</b> outlining tool. Use this page to create an outline for your new book.
     </div>
     <div id="VBDStatSpan"></div>
-    <div style="margin: auto; clear: both; padding: 5px; border: 1px solid #AAAAAA; background-color: #F8F8F8; width: 95%;">
+    <div id="VBDInstructionSpan">
         <b>Quick Start Instructions</b>
         <ol>
             <li>Click the title of a book to rename it<br>Click "<b>New Book</b>" to give your book a name</li>
@@ -227,18 +230,14 @@ EOD;
             <li>When you are finished, click <b>Publish Book!</b> to create the book
         </ol>
     </div>
-    <div id="VBDSpan" style="width: 65%;">
-        JavaScript is not working. Make sure to enable JavaScript in your browser.
-    </div>
-    <input type="submit" value="Publish Book!"/><br>
     <div id="VBDOptionsSpan">
         <h2>Options</h2>
         <input type="checkbox" name="optCreateLeaves" checked>Create Leaf Pages</input><br>
         <input type="checkbox" name="optNumberPages">Number Pages</input><br>
         <input type="checkbox" name="optHeaderTemplate" checked>Use Header Template</input><br>
         <input type="checkbox" name="optAutogenTemplate">Autogenerate Header Template</input><br>
-        <!-- Add a <select> item here with a list of auto-generate template styles -->
-        <input type="checkbox" name="optUseNamespace">Use Alternate Namespace:</input><input type="text" name="optNamespace"/><br>
+        <!-- TODO: Add a <select> item here with a list of auto-generate template styles -->
+        <input type="checkbox" name="optUseNamespace">Use Alternate Namespace:</input>&nbsp;<input type="text" name="optNamespace"/><br>
 
         <!-- These are TODO Options -->
         <input type="checkbox" name="optUseUserSpace" disabled>Create in user space</input><br>
@@ -247,6 +246,11 @@ EOD;
         <input type="checkbox" name="optResourcesPage" disabled>Resources Page</input> &mdash;
         <input type="checkbox" name="optLicensingPage" disabled>Licensing Page</input>
     </div>
+    <div id="VBDOutlineSpan">
+        JavaScript is not working, or designer.js could not be found. Make sure to enable JavaScript in your browser, and
+        contact your wiki site administrator.
+    </div>
+    <input type="submit" value="Publish Book!"/><br>
     <!--
     TODO: This is a temporary addition to aid in debugging. It shows the intermediate code before it's transmitted to the
           server. This way if there is some kind of a server error, we can save a copy of that intermediate code to a safe place

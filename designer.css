@@ -1,7 +1,43 @@
 div#VBDWelcomeSpan {
-	width: 95%;
-	margin: auto;
-	padding: 5px;
-	border: 1px solid #AAAAAA;
-	background-color: #F8F8F8;
+    width: 95%;
+    margin: auto;
+    padding: 5px;
+    border: 1px solid #AAAAAA;
+    background-color: #F8F8F8;
+}
+
+div#VBDInstructionSpan {
+    margin-left: 5px;
+    clear: both;
+    padding: 5px;
+    border: 1px solid #AAAAAA;
+    background-color: #F8F8F8;
+    width: 35%;
+    float: right;
+    clear: left;
+}
+
+div#VBDOptionsSpan {
+    width: 35%;
+    margin-left: 5px;
+    padding: 5px;
+    float: right;
+    clear: both;
+    border: 1px solid #AAAAAA;
+    background-color: #F8F8F8;
+}
+
+div#VBDOutlineSpan {
+    width: 65%;
+}
+
+div#VBDPageHeadingNode {
+    position: relative;
+    padding: 5px;
+}
+
+div#VBDPageHeadingContainer {
+    margin-left: 2em;
+    border-bottom: 1px dashed #AAAAAA;
+    border-left: 1px dashed #AAAAAA;
 }
