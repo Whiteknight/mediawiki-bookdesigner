@@ -12,12 +12,14 @@ function PageHeading(name) {
     this.box = null;
 }
 
-PageHeading.prototype.getTextNode = function () {
-    var self = this;
-    var div = vbd.makeElement('small', {style: "padding-left: 2em;"},
+// Get a div element that will contain the text of the heading.
+// TODO: Not currently used
+//PageHeading.prototype.getTextNode = function () {
+//    var self = this;
+//    var div = vbd.makeElement('small', {style: "padding-left: 2em;"},
     // TODO: Add all this back in when we have user-editable text
     //  ((this.pagetext.length == 0)?('[click here to edit heading text]'):(this.pagetext)));
-    "");
+//    "");
     //div.onclick = function() {
     //  var edit = vbd.makeElement('textarea', {rows:10});
     //  edit.value = self.pagetext;
@@ -33,11 +35,11 @@ PageHeading.prototype.getTextNode = function () {
     //  self.closeButton();
     //  edit.focus();
     //}
-    div.style.cursor = "pointer";
-    return div;
-}
+//    div.style.cursor = "pointer";
+//    return div;
+//}
 
-//make a link to modify the list of subpages
+// Make a link to modify the list of subpages
 PageHeading.prototype.makeSubpagesLinks = function () {
     var link = vbd.makeElement('a', null, ['Subpages']);
     var self = this;
@@ -79,7 +81,9 @@ PageHeading.prototype.makeSubpagesLinks = function () {
     return [link, add];
 }
 
-//the name of the heading
+// Get a node represending the page heading. This is a large bit of text
+// representing the name of the heading, and all the child objects that get
+// included with it.
 PageHeading.prototype.getTitleNode = function () {
     var container = vbd.makeElement('span');
     var collapse = vbd.makeElement('small', null, ((this.collapse == 0) ? '[-] ' : '[+] '));
@@ -119,68 +123,17 @@ PageHeading.prototype.getTitleNode = function () {
     return(container);
 }
 
-//get the depth of the page the heading is on
-PageHeading.prototype.getDepth = function () {
-    return this.parent.getDepth();
-}
+// Make the collection text for this heading
+// TODO: This is not currently used but could be. It has value on wikis with the
+//       collections extension installed
+//PageHeading.prototype.makeCollectionText = function () {
+//    var text = ";" + this.label + "\n";
+//    for(var i = 0; i < this.subpages.length; i++)
+//        text = text + this.subpages[i].makeCollectionText();
+//    return text;
+//}
 
-//make wikitext of pages under a heading, but not of the heading itself
-PageHeading.prototype.makeWikitextLinkStars = function (parent) {
-    var text = "";
-    for(var i = 0; i < this.subpages.length; i++)
-        text = text + this.subpages[i].makeWikitextLinkStars(parent);
-    return text;
-}
-
-//make the links for the pages under a heading, as formatted for a template
-PageHeading.prototype.makeTemplateLinks = function () {
-    var text = "";
-    for(var i = 0; i < this.subpages.length; i++)
-        text = text + this.subpages[i].makeTemplateLinks();
-    return text;
-}
-
-//create a list of all subpages of the given heading and append them to list
-PageHeading.prototype.listAllSubpages = function(list) {
-    if(this.subpages.length) {
-        for(var i = this.subpages.length - 1; i >= 0; i--) {
-            list = this.subpages[i].listAllSubpages(list);
-            list.push(this.subpages[i]);
-        }
-    }
-    return list;
-}
-
-//make the wikitext for a heading
-PageHeading.prototype.makeWikitext = function () {
-    var text = "";
-    if(this.parent.isRoot())
-        text = "=== " + this.label + " ===\n\n";
-    else
-        text = "== " + this.label + " ==\n\n";
-    text += this.pagetext + "\n";
-    for(var i = 0; i < this.subpages.length; i++)
-        text = text + this.subpages[i].makeWikitextLinkStars(this);
-    return text;
-}
-
-//create the print version text for this heading
-PageHeading.prototype.makePrintVersionText = function () {
-    var text = "{{Print unit page|" + this.label + "|" + this.pagetext + "}}\n\n";
-    for(var x = 0; x < this.subpages.length; x++)
-        text = text + this.subpages[x].makePrintVersionText();
-    return text;
-}
-
-//make the collection text for this heading
-PageHeading.prototype.makeCollectionText = function () {
-    var text = ";" + this.label + "\n";
-    for(var i = 0; i < this.subpages.length; i++)
-        text = text + this.subpages[i].makeCollectionText();
-    return text;
-}
-
-//create a close button
+// Create a close button for the node
 PageHeading.prototype.closeButton = function () {
     var self = this;
     this.formspan.appendChild(vbd.makeButton('', 'Close', function() {
@@ -188,7 +141,8 @@ PageHeading.prototype.closeButton = function () {
     }));
 }
 
-//prepare the text to save a heading from the outline
+// Generate the intermediate code representation for this heading, for use by
+// the server to actually build the page.
 PageHeading.prototype.makeSaveText = function () {
     var text = "";
     text += this.label + "\n[\n";
@@ -208,7 +162,8 @@ PageHeading.prototype.makeSaveText = function () {
     return text + "\n]\n";
 }
 
-//make a heading node in the outline
+// Make a heading node in the outline. This contains the heading's name and all
+// the objects that go with it.
 PageHeading.prototype.makeNode = function () {
     this.box = vbd.makeElement('div', null, [
         this.getTitleNode(), " - ",
@@ -238,20 +193,20 @@ PageHeading.prototype.makeNode = function () {
     return this.box;
 }
 
-//add a subpage to this heading
+// Add a subpage to this heading
 PageHeading.prototype.addSubpage = function (subpage) {
     subpage.parent = this.parent;
     subpage.parent2 = this;
     this.subpages.push(subpage);
 }
 
-//add a new heading to the parent of this (headings cannot contain headings)
+// Add a new heading to the parent of this (headings cannot contain headings)
 PageHeading.prototype.addHeading = function (heading) {
     heading.parent = this.parent;
     this.parent.headings.push(heading);
 }
 
-//remove a subpage from this heading
+// Remove a subpage from this heading
 PageHeading.prototype.removeSubpage = function(subpage) {
     for(var i = 0; i < this.subpages.length; i++) {
         if(this.subpages[i] != subpage)
