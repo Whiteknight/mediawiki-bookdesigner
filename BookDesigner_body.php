@@ -225,15 +225,24 @@ EOD;
     </div>
     <div id="VBDStatSpan"></div>
     <div id="VBDInstructionSpan">
-        <h2>{$this->GetMessage('qsistart')}</h2>
-        {$this->GetMessage('qsi')}
+        <h2>
+            <span style="float: right; font-size: 67%;">
+                [<a id="VBDQuickStartToggle" onclick="vbd.ToggleGUIWidget('VBDQuickStartInternal', 'VBDQuickStartToggle');"><!--
+                    -->{$this->GetMessage('hide')}<!--
+                --></a>]
+            </span>
+            {$this->GetMessage('qsistart')}
+        </h2>
+        <div id="VBDQuickStartInternal">
+            {$this->GetMessage('qsi')}
+        </div>
     </div>
     <div id="VBDOptionsSpan">
         <h2>
             <span style="float: right; font-size: 67%;">
-                [<a id="VBDOptionsToggle" onclick="vbd.ToggleOptions();">
-                    {$this->GetMessage('show')}
-                </a>]
+                [<a id="VBDOptionsToggle" onclick="vbd.ToggleGUIWidget('VBDOptionsInternal', 'VBDOptionsToggle');"><!--
+                    -->{$this->GetMessage('show')}<!--
+                --></a>]
             </span>
             {$this->GetMessage('options')}
         </h2>

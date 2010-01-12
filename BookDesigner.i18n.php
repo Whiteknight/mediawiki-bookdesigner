@@ -24,7 +24,8 @@ $messages['en'] = array(
         </ol>
 EOQSI
         ,
-        'bookdesigner-show' => 'show',
+        'bookdesigner-show' => 'Show',
+        'bookdesigner-hide' => 'Hide',
         'bookdesigner-options' => 'Options',
         'bookdesigner-optsbook' => 'Book Options',
         'bookdesigner-optusenamespace' => 'Use Alternate Namespace',

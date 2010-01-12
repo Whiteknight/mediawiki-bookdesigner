@@ -1,7 +1,7 @@
 //Visual Book designer (vbd) class
 var vbd = {
     // Version numbers
-    version:  3.74,
+    version:  3.75,
 
     // default name of all new books:
     pageTree: null,
@@ -14,8 +14,6 @@ var vbd = {
     //div IDs where the gadget is inserted into the page
     formspan: "VBDOutlineSpan",
     statspan: "VBDStatSpan",
-    optsspan: "VBDOptionsInternal",
-    optslink: "VBDOptionsToggle",
     hiddenBoxName: 'VBDHiddenTextArea',
 
     _URLBase: wgServer + wgScript + "?title=",
@@ -93,92 +91,93 @@ vbd.clear = function() {
 
 // Try to load in a saved collection. This requires the Collections extension
 // TODO: This is not currently used.
-vbd.loadNodeTreeCollection = function(text) {
-    vbd.clear();
-    var last = vbd.pageTree;
-    var lines = text.split("\n");
-    for(var i = 0; i < lines.length; i++) {
-        if(lines[i].match(/^===/) || lines[i].match(/\[\[category:/i))
-            continue;
-        else if(lines[i].match(/^==.+==/))
-            vbd.pageTree.pagename = vbd.extractHeadingName(lines[i]);
-        else if(lines[i].match(/^;/)) {
-            var head = new PageHeading(lines[i].substring(1));
-            last.addHeading(head);
-            last = head;
-        } else if(lines[i].match(/^:\[\[/)) {
-            var page = new BookPage(vbd.extractLinkPageName(lines[i], vbd.pageTree.pagename));
-            last.addSubpage(page);
-        }
-    }
-    vbd.visual();
-    vbd.pageTree.formspan.innerHTML = 'Successfully loaded collection!';
-}
+//vbd.loadNodeTreeCollection = function(text) {
+//    vbd.clear();
+//    var last = vbd.pageTree;
+//    var lines = text.split("\n");
+//    for(var i = 0; i < lines.length; i++) {
+//        if(lines[i].match(/^===/) || lines[i].match(/\[\[category:/i))
+//            continue;
+//        else if(lines[i].match(/^==.+==/))
+//            vbd.pageTree.pagename = vbd.extractHeadingName(lines[i]);
+//        else if(lines[i].match(/^;/)) {
+//            var head = new PageHeading(lines[i].substring(1));
+//            last.addHeading(head);
+//            last = head;
+//        } else if(lines[i].match(/^:\[\[/)) {
+//            var page = new BookPage(vbd.extractLinkPageName(lines[i], vbd.pageTree.pagename));
+//            last.addSubpage(page);
+//        }
+//    }
+//    vbd.visual();
+//    vbd.pageTree.formspan.innerHTML = 'Successfully loaded collection!';
+//}
 
 // Take the wikitext of an arbitrary page and try to load a reasonable outline from it.
 // TODO: Not currently used
-vbd.loadNodeTreeTOC = function (text, title) {
-    vbd.clear();
-    var lastn = 0;
-    var last = new Array();
-    last[0] = vbd.pageTree;
-    vbd.pageTree.pagename = title;
-    var lines = text.split("\n");
-    for(i = 0; i < lines.length; i++) {
-        lines[i] = lines[i].replace(/^[ \t]+/, "");
-        lines[i] = lines[i].replace(/[ \t]+$/, "");
-        lines[i] = lines[i].replace(/\r\n/g, "");
-        if(lines[i] == "")
-            continue;
-        if(lines[i].match(/^===.+===/)) { //heading
-            var head = new PageHeading(vbd.extractHeadingName(lines[i]));
-            last[0].addHeading(head);
-            last[0] = head;
-        } else if(lines[i].match(/^[\*\#]*\s*\[\[.+\]\]/)) { //subpage
-            if(lines[i].match(/Category:/i))
-                continue;
-            var stars = lines[i].match(/^[\*\#]*/);
-            var n = stars[0].length;
-            if(n == 0)
-                n = 1;
-            var k = n - 1;
-            if(last[k] == null)
-                k = 0;
-            last[n] = new BookPage(vbd.extractLinkPageName(lines[i], title));
-            last[k].addSubpage(last[n]);
-            lastn = n;
-        }
-    }
-    vbd.pageTree.formspan.innerHTML = "";
-    vbd.visual();
-    vbd.pageTree.formspan.appendChild(document.createTextNode(
-        'Successfully loaded outline from ' + title + ' TOC'
-    ));
-}
+//vbd.loadNodeTreeTOC = function (text, title) {
+//    vbd.clear();
+//    var lastn = 0;
+//    var last = new Array();
+//    last[0] = vbd.pageTree;
+//    vbd.pageTree.pagename = title;
+//    var lines = text.split("\n");
+//    for(i = 0; i < lines.length; i++) {
+//        lines[i] = lines[i].replace(/^[ \t]+/, "");
+//        lines[i] = lines[i].replace(/[ \t]+$/, "");
+//        lines[i] = lines[i].replace(/\r\n/g, "");
+//        if(lines[i] == "")
+//            continue;
+//        if(lines[i].match(/^===.+===/)) { //heading
+//            var head = new PageHeading(vbd.extractHeadingName(lines[i]));
+//            last[0].addHeading(head);
+//            last[0] = head;
+//        } else if(lines[i].match(/^[\*\#]*\s*\[\[.+\]\]/)) { //subpage
+//            if(lines[i].match(/Category:/i))
+//                continue;
+//            var stars = lines[i].match(/^[\*\#]*/);
+//            var n = stars[0].length;
+//            if(n == 0)
+//                n = 1;
+//            var k = n - 1;
+//            if(last[k] == null)
+//                k = 0;
+//            last[n] = new BookPage(vbd.extractLinkPageName(lines[i], title));
+//            last[k].addSubpage(last[n]);
+//            lastn = n;
+//        }
+//    }
+//    vbd.pageTree.formspan.innerHTML = "";
+//    vbd.visual();
+//    vbd.pageTree.formspan.appendChild(document.createTextNode(
+//        'Successfully loaded outline from ' + title + ' TOC'
+//    ));
+//}
 
 // try to get the name of a level-3 heading
 // TODO: Only used for loading collections and outlines, neither of which are used.
-vbd.extractHeadingName = function(line) {
-    line = line.substring(3);
-    line = line.substring(0, line.indexOf("==="));
-    return line;
-}
+//vbd.extractHeadingName = function(line) {
+//    line = line.substring(3);
+//    line = line.substring(0, line.indexOf("==="));
+//    return line;
+//}
 
 // Try to get the page name from a link. Very limited ability to deal with relative links
-vbd.extractLinkPageName = function(line, title) {
-    line = line.substring(line.indexOf("[[") + 2);
-    var end = line.indexOf("|");
-    if(end == -1)
-        end = line.indexOf("]]");
-    line = line.substring(0, end)
-    if(line.charAt(line.length - 1) == '/')
-        line = line.substring(0, line.length - 1);
-    if(line.charAt(0) == '/')
-        line = title + line;
-    for(end = line.indexOf("/") ; end != -1; end = line.indexOf("/"))
-        line = line.substring(end + 1);
-    return line;
-}
+// TODO: Nobody uses this right now
+//vbd.extractLinkPageName = function(line, title) {
+//    line = line.substring(line.indexOf("[[") + 2);
+//    var end = line.indexOf("|");
+//    if(end == -1)
+//        end = line.indexOf("]]");
+//    line = line.substring(0, end)
+//    if(line.charAt(line.length - 1) == '/')
+//        line = line.substring(0, line.length - 1);
+//    if(line.charAt(0) == '/')
+//        line = title + line;
+//    for(end = line.indexOf("/") ; end != -1; end = line.indexOf("/"))
+//        line = line.substring(end + 1);
+//    return line;
+//}
 
 //force a page name to use appropriate capitalization
 vbd.forceCaps = function(title, isRoot) {
@@ -347,12 +346,12 @@ vbd.loadWikiText = function(page, callback) {
 }
 
 // Toggle display of the options section on the UI
-vbd.ToggleOptions = function() {
-    var span = document.getElementById(vbd.optsspan);
+vbd.ToggleGUIWidget = function(pane, link) {
+    var span = document.getElementById(pane);
     var state = span.style.display;
     span.style.display = (state == "none") ? "block" : "none";
-    var link = document.getElementById(vbd.optslink);
-    link.innerHTML = (state == "none") ? "Hide" : "Show";
+    var linkelem = document.getElementById(link);
+    linkelem.innerHTML = (state == "none") ? "Hide" : "Show";
 }
 
 
