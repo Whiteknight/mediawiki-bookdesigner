@@ -1,0 +1,49 @@
+The [[Special:BookDesigner|Book Designer]] tool is used to graphically plan and outline a new book on a wiki without having to worry about properly setting up all the wikitext and structural elements that a new book requires. An outline to a book can be created without needing to make many edits to the wiki for subsequent changes, and without having to use an external program to keep track of changes.
+
+== Quick Start: Creating a New Book ==
+
+Creating a new book is a straight-forward process. Open the [[Special:BookDesigner|Book Designer]] tool and a new outline will be started for you. To get started quickly creating a basic new book, follow these steps:
+
+# Click on the book title "New Book". This will open an edit box where a new name can be entered. Once you have entered the title you want, click the '''Accept''' button. The tool will check that the title is not already in use and will prevent you from creating a new book with the same title as an existing book
+# Under the title of the book are several links. Two in particular are "Subpages" and next to that is "[ + ]". Click the "[ + ]" button to add a new subpage to the outline under the main page
+# Click on the name of the new page to change it. Once the name is what you expect, click "Accept".
+# Repeat this process for all subpages that your new book needs.
+# Click the '''Publish Book!''' button to automatically create all pages in your book.
+
+These are the basics of the book creator. In the sections below we will discuss some of the more advanced usages and options of the tool.
+
+== Creating Pages From a List ==
+
+The "Subpages" link under the title of a page opens an edit box where subpages can be listed. List subpages here, one per line, in the order that you would like to see them appear in the outline. Once you have the list of pages the way you want it, click the "Save" button to save those pages to the outline.
+
+The subpage textbox can be edited as well. Clicking the "Subpages" link where there already are subpages of the current page will display those page names in the textbox. You can rearrange those titles here without destroying pages. Removing a line removes that page from the outline. Adding a line adds a new page to the outline at that place in the list.
+
+== Creating Headings ==
+
+Headings can be created on a page to help add structure to individual pages without needing to create subpages. Headings, like subpages, can be added in two ways: One at a time by clicking the "[ + ]" link, and as a complete list by clicking the "Headings for this page" link. Similarly to pages, headings can be renamed by clicking the heading label.
+
+== Clearing the Outline ==
+
+To clear the outline and start over, click the "Clear" link next to the title of the main page. This will destroy the outline and no record of it will be saved. Be Warned!
+
+== Options ==
+
+The book designer has several options associated with it.
+
+=== Create Leaf Pages ===
+
+Think of a book like a tree. The first page in the book, which is typically the table of contents in a wiki, is the "root" of the tree. From the root many trees then have a series of "branches" (chapters), and then each branch has a series of leaves (pages). We can shorten this metaphore by excluding chapters and having the individual pages extend directly from the root, and we can expand it by adding additional layers of sub-chapters, sub-sub-chapters, sub-pages, etc.
+
+The outermost pages in this hierarchy, the pages which themselves contain no subpages, are called the "leaves". The checkbox "Create leaf pages" will force the designer to automatically create these pages with default text. If this box is not checked the leaf pages will not be created, though the root and all branch pages will be. The branch pages will contain lists of "red links" to leaf pages that do not exist.
+
+== Use Header Template ==
+
+To maintain a consistent look and feel among all pages in a book, book authors tend to use common templates at the top of each page. Templates on the wiki are snippets of wikitext that can be reused on multiple pages. Making one change to the template itself will automatically make changes to all the places where the template is used. This helps to keep pages looking the same without having make dozens of small stylistic changes to all pages in the book. The styles and other elements (navigational links, for instance) can be defined in one place and used everywhere.
+
+The book designer can automatically include a header template on all pages of the book. To do this, check the "Use Header Template" option".
+
+== Number Pages ==
+
+Pages in the book can be numbered at each level of hierarchy automatically. This is better than manual numbering which can be error prone and make changes to the structure difficult. To automatically number all pages in the book, check the "Number Pages" checkbox
+
+[[Category:BookDesigner Documentation]]
