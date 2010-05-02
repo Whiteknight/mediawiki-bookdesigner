@@ -12,7 +12,7 @@ of the UI, we can insert string constants directly.
 /* *** English *** */
 $messages['en'] = array(
     'bookdesigner' => 'Book Designer',
-    'bookdesigner-desc' => "Design and create books",
+    'bookdesigner-desc' => "Design and create books using a graphical outline interface",
     'bookdesigner-welcome' => "This is the <b>Visual Book Design</b> outlining tool. Use this page to create an outline for your new book.",
     'bookdesigner-qsistart' => "Quick Start Instructions",
     'bookdesigner-qsi' => <<< EOQSI
