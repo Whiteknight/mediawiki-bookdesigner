@@ -12,8 +12,8 @@ $wgExtensionCredits['specialpage'][] = array(
     'name'           => 'BookDesigner',
     'author'         => 'Andrew Whitworth',
     'url'            => 'http://github.com/Whiteknight/mediawiki-bookdesigner',
-    'description'    => 'Design and create Books',
-    'descriptionmsg' => 'BookDesigner-desc',
+    'description'    => 'Design and create books using a graphical outlining tool',
+    'descriptionmsg' => 'bookdesigner-desc',
     'version'        => '0.0.1',
 );
 
