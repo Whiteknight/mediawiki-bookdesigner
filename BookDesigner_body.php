@@ -5,10 +5,10 @@ class BookDesigner extends SpecialPage {
         wfLoadExtensionMessages('BookDesigner');
     }
 
-    // set this to true to enable debugging output.
-    protected $debug        = false;
+    # set this to true to enable debugging output.
+    protected $debug              = false;
 
-    // Internal values. Don't modify them, they get set at runtime
+    # Internal values. Don't modify them, they get set at runtime
     protected $bookname           = "";
     protected $createleaves       = false;
     protected $usetemplates       = false;
@@ -20,39 +20,33 @@ class BookDesigner extends SpecialPage {
     protected $createlicensing    = false;
     protected $namespace          = "";
 
-    // Quick and dirty debugging utilities. The value of $this->debug determines whether
-    // we print something. These functions can probably disappear soon since the
-    // parseBookPage parser routine has been mostly tested.
-    function _dbg($word)
-    {
+    # Quick and dirty debugging utilities. The value of $this->debug determines whether
+    # we print something. These functions can probably disappear soon since the
+    # parseBookPage parser routine has been mostly tested.
+    function _dbg($word) {
         global $wgOut;
         if($this->debug)
             $wgOut->addHTML($word);
     }
-    function _dbgl($word)
-    {
+    function _dbgl($word) {
         $this->_dbg($word . "<br/>");
     }
 
-    function GetHeaderTemplateTag()
-    {
+    function GetHeaderTemplateTag() {
         return $this->usetemplates ? "{{" . $this->bookname . "}}\n\n" : "";
     }
 
-    function GetFooterTemplateTag()
-    {
+    function GetFooterTemplateTag() {
         return "";
     }
 
-    function GetCreateFlag($isroot)
-    {
+    function GetCreateFlag($isroot) {
         $create = $this->createleaves || $isroot;
         $this->_dbgl("Creating leaf page: " . ($createleaf ? "1" : "0"));
         return $create;
     }
 
-    function CreateIntroduction($isroot)
-    {
+    function CreateIntroduction($isroot) {
         if ($isroot && $this->createintroduction) {
             $text = $this->GetHeaderTemplateTag() . $this->GetFooterTemplateTag();
             $this->CreateOnePage($this->bookname . "/Introduction", $text, "Creating Introduction page");
@@ -60,8 +54,7 @@ class BookDesigner extends SpecialPage {
         }
         return "";
     }
-    function CreateResources($isroot)
-    {
+    function CreateResources($isroot) {
         if ($isroot && $this->createresources) {
             $text = $this->GetHeaderTemplateTag() . $this->GetFooterTemplateTag();
             $this->CreateOnePage($this->bookname . "/Resources", $text, "Creating Resources page");
@@ -69,8 +62,7 @@ class BookDesigner extends SpecialPage {
         }
         return "";
     }
-    function CreateLicensing($isroot)
-    {
+    function CreateLicensing($isroot) {
         if ($isroot && $this->createlicensing) {
             $text = $this->GetHeaderTemplateTag() . $this->GetFooterTemplateTag();
             $this->CreateOnePage($this->bookname . "/Licensing", $text, "Creating Licensing page");
@@ -79,21 +71,20 @@ class BookDesigner extends SpecialPage {
         return "";
     }
 
-    // Home-brewed recursive descent parser. Yes there are better ways of doing
-    // this, and yes this is ugly and stupid and ugly. Whatever, this is what
-    // we have.
-    // [] contain lists of pages. {} contain lists of headings. Each page has[]{}
-    // and each heading has only []. Each bare line of text inside a set of brackets
-    // is that type of thing. Empty lines are ignored.
-    function parseBookPage($page, $path, $lines, $idx)
-    {
+    # Home-brewed recursive descent parser. Yes there are better ways of doing
+    # this, and yes this is ugly and stupid and ugly. Whatever, this is what
+    # we have.
+    # [] contain lists of pages. {} contain lists of headings. Each page has[]{}
+    # and each heading has only []. Each bare line of text inside a set of brackets
+    # is that type of thing. Empty lines are ignored.
+    function parseBookPage($page, $path, $lines, $idx) {
         global $wgOut, $wgScriptPath;
         $isroot = ($idx == 1);
         $subpagenum = 0;
         $pagetext = $this->GetHeaderTemplateTag() . $this->CreateIntroduction($isroot);
         $createleaf = $this->GetCreateFlag($isroot);
 
-        // Loop over all subpages inside [] brackets
+        # Loop over all subpages inside [] brackets
         for($i = $idx; $i < sizeof($lines); $i++) {
             $line = rtrim($lines[$i]);
             $this->_dbg("Line " . $i . ": " . $line . "> ");
@@ -112,7 +103,7 @@ class BookDesigner extends SpecialPage {
                 break;
             }
             else {
-                // We have a page name
+                # We have a page name
                 $this->_dbgl("Recurse");
                 $subpagenum++;
                 $name = ($this->numberpages ? $subpagenum . ". " : "") . $line;
@@ -124,7 +115,7 @@ class BookDesigner extends SpecialPage {
         }
         $pagetext .= "\n";
 
-        // Loop over all headings inside {} brackets
+        # Loop over all headings inside {} brackets
         for($i = $idx; $i < sizeof($lines); $i++) {
             $line = rtrim($lines[$i]);
             $this->_dbg("Line " . $i . ": " . $line . "> ");
@@ -144,8 +135,8 @@ class BookDesigner extends SpecialPage {
             $this->_dbgl("Heading");
             $createpage = TRUE;
             $pagetext .= "== " . $line . " ==\n\n";
-            // a heading can have pages under it, so enter another loop here to
-            // handle those pages.
+            # a heading can have pages under it, so enter another loop here to
+            # handle those pages.
             for($i++; $i < sizeof($lines); $i++) {
                 $line2 = rtrim($lines[$i]);
                 $this->_dbg("Line " . $i . ": " . $line2 . "> ");
@@ -168,18 +159,18 @@ class BookDesigner extends SpecialPage {
             }
         }
 
-        // Get the rest of the text, most of which is optional
+        # Get the rest of the text, most of which is optional
         $pagetext = $pagetext .
             $this->CreateResources($isroot) .
             $this->CreateLicensing($isroot) .
             $this->GetFooterTemplateTag();
 
-        // We've parsed all direct subpages and all headings (and all subpages
-        // of those). We have all the information we need now to actually create
-        // this page. Page name is in $path. Page text is in $pagetext
-        // We only create the page if (1) we opt to create all pages, (2) the
-        // page contains subpages, (3) the page contains headings, or (4) it is
-        // the main page.
+        # We've parsed all direct subpages and all headings (and all subpages
+        # of those). We have all the information we need now to actually create
+        # this page. Page name is in $path. Page text is in $pagetext
+        # We only create the page if (1) we opt to create all pages, (2) the
+        # page contains subpages, (3) the page contains headings, or (4) it is
+        # the main page.
         if ($createleaf)
             $this->CreateOnePage($path, $pagetext, "Creating new book automatically");
         return $idx;
@@ -194,7 +185,7 @@ class BookDesigner extends SpecialPage {
         $wgOut->addHTML("Created <a href=\"$wgScriptPath/index.php?title=$path\">$path</a><br/>");
     }
 
-    // Build the header template
+    # Build the header template
     function generateHeaderTemplate( $bookname ) {
         global $wgOut, $wgScriptPath;
         $name = "Template:" . $bookname;
@@ -205,13 +196,15 @@ class BookDesigner extends SpecialPage {
         $wgOut->addHTML("Created <a href=\"$wgScriptPath/index.php?title=$name\">$name</a><br/>");
     }
 
-    // Returns an EXTREMELY basic text string for creating a header template.
-    // TODO: Make this less bare-bones
+    # Returns an EXTREMELY basic text string for creating a header template.
+    # TODO: Make this less bare-bones
     function getTemplateText($bookname) {
         $text = <<<EOD
 
 <div style="border: 1px solid #AAAAAA; background-color: #F8F8F8; padding: 5px; margin: auto; width: 95%">
-<center><big>'''[[$bookname]]'''</big></center>
+    <center>
+        <big>'''[[$bookname]]'''</big>
+    </center>
 </div>
 
 EOD;
@@ -250,7 +243,7 @@ EOD;
         return wfMsg('bookdesigner-' . $msgname);
     }
 
-    // Main function, this is where execution starts
+    # Main function, this is where execution starts
     function execute( $par ) {
         global $wgRequest, $wgOut, $wgScriptPath;
         $this->setHeaders();
@@ -264,19 +257,19 @@ EOD;
         if(method_exists($wgOut, "addExtensionStyle")) {
             $wgOut->addExtensionStyle($csspath . "/designer.css");
         } else {
-            // This is a hack for older MediaWiki (1.14 and below?).
-            // addStyle prepends "$wgScriptPath/skins/" to the front,
-            // so we need to navigate to the correct place
+            # This is a hack for older MediaWiki (1.14 and below?).
+            # addStyle prepends "$wgScriptPath/skins/" to the front,
+            # so we need to navigate to the correct place
             $wgOut->addStyle("../extensions/BookDesigner/designer.css");
         }
 
         if(isset($par)) {
-            // TODO: we've specified a book name, load that book into the outline
+            # TODO: we've specified a book name, load that book into the outline
             $wgOut->addHTML($par);
         }
         else if($wgRequest->wasPosted()) {
-            // TODO: Validate that we are logged in. Also, create an option to require
-            //       certain permissions (either admin, or a custom permission or something)
+            # TODO: Validate that we are logged in. Also, create an option to require
+            #       certain permissions (either admin, or a custom permission or something)
             $text = $wgRequest->getText('VBDHiddenTextArea');
             $this->getOptions();
 
