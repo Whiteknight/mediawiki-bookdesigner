@@ -1,9 +1,9 @@
-//Visual Book designer (vbd) class
+// Visual Book designer (vbd) object, global singleton
 var vbd = {
     // Version numbers
     version:  3.75,
 
-    // default name of all new books:
+    // Default name of all new books:
     pageTree: null,
     defName: 'New Book',
     defpagename: 'New Page',
@@ -11,7 +11,7 @@ var vbd = {
     newpagecnt: 1,
     newheadcnt: 1,
 
-    //div IDs where the gadget is inserted into the page
+    // Div IDs where the gadget is inserted into the page
     formspan: "VBDOutlineSpan",
     statspan: "VBDStatSpan",
     hiddenBoxName: 'VBDHiddenTextArea',
@@ -31,7 +31,7 @@ addOnloadHook(function() {
     vbd.visual();
 });
 
-//Basic array management functions
+// Basic array management functions
 vbd.CopyArray = function(array) {
     return array.slice(0);
 }
@@ -48,7 +48,7 @@ vbd.FindHeadNameInArray = function(array, name) {
     return -1;
 }
 
-//Make a checkbox that corresponds to a boolean flag in vbd
+// Make a checkbox that corresponds to a boolean flag in vbd
 vbd.makeOptionsCheckbox = function (field) {
     var cbox = vbd.makeElement('input', {type: "checkbox"});
     cbox.checked = vbd[field];
@@ -70,7 +70,7 @@ vbd.spanText = function(spanid, txt) {
     return item;
 }
 
-// rebuild the outline and display the updated version in the browser
+// Rebuild the outline and display the updated version in the browser
 vbd.visual = function() {
     vbd.box = vbd.spanText(vbd.formspan, "");
     if(vbd.box == null)
@@ -89,97 +89,7 @@ vbd.clear = function() {
     vbd.visual();
 }
 
-// Try to load in a saved collection. This requires the Collections extension
-// TODO: This is not currently used.
-//vbd.loadNodeTreeCollection = function(text) {
-//    vbd.clear();
-//    var last = vbd.pageTree;
-//    var lines = text.split("\n");
-//    for(var i = 0; i < lines.length; i++) {
-//        if(lines[i].match(/^===/) || lines[i].match(/\[\[category:/i))
-//            continue;
-//        else if(lines[i].match(/^==.+==/))
-//            vbd.pageTree.pagename = vbd.extractHeadingName(lines[i]);
-//        else if(lines[i].match(/^;/)) {
-//            var head = new PageHeading(lines[i].substring(1));
-//            last.addHeading(head);
-//            last = head;
-//        } else if(lines[i].match(/^:\[\[/)) {
-//            var page = new BookPage(vbd.extractLinkPageName(lines[i], vbd.pageTree.pagename));
-//            last.addSubpage(page);
-//        }
-//    }
-//    vbd.visual();
-//    vbd.pageTree.formspan.innerHTML = 'Successfully loaded collection!';
-//}
-
-// Take the wikitext of an arbitrary page and try to load a reasonable outline from it.
-// TODO: Not currently used
-//vbd.loadNodeTreeTOC = function (text, title) {
-//    vbd.clear();
-//    var lastn = 0;
-//    var last = new Array();
-//    last[0] = vbd.pageTree;
-//    vbd.pageTree.pagename = title;
-//    var lines = text.split("\n");
-//    for(i = 0; i < lines.length; i++) {
-//        lines[i] = lines[i].replace(/^[ \t]+/, "");
-//        lines[i] = lines[i].replace(/[ \t]+$/, "");
-//        lines[i] = lines[i].replace(/\r\n/g, "");
-//        if(lines[i] == "")
-//            continue;
-//        if(lines[i].match(/^===.+===/)) { //heading
-//            var head = new PageHeading(vbd.extractHeadingName(lines[i]));
-//            last[0].addHeading(head);
-//            last[0] = head;
-//        } else if(lines[i].match(/^[\*\#]*\s*\[\[.+\]\]/)) { //subpage
-//            if(lines[i].match(/Category:/i))
-//                continue;
-//            var stars = lines[i].match(/^[\*\#]*/);
-//            var n = stars[0].length;
-//            if(n == 0)
-//                n = 1;
-//            var k = n - 1;
-//            if(last[k] == null)
-//                k = 0;
-//            last[n] = new BookPage(vbd.extractLinkPageName(lines[i], title));
-//            last[k].addSubpage(last[n]);
-//            lastn = n;
-//        }
-//    }
-//    vbd.pageTree.formspan.innerHTML = "";
-//    vbd.visual();
-//    vbd.pageTree.formspan.appendChild(document.createTextNode(
-//        'Successfully loaded outline from ' + title + ' TOC'
-//    ));
-//}
-
-// try to get the name of a level-3 heading
-// TODO: Only used for loading collections and outlines, neither of which are used.
-//vbd.extractHeadingName = function(line) {
-//    line = line.substring(3);
-//    line = line.substring(0, line.indexOf("==="));
-//    return line;
-//}
-
-// Try to get the page name from a link. Very limited ability to deal with relative links
-// TODO: Nobody uses this right now
-//vbd.extractLinkPageName = function(line, title) {
-//    line = line.substring(line.indexOf("[[") + 2);
-//    var end = line.indexOf("|");
-//    if(end == -1)
-//        end = line.indexOf("]]");
-//    line = line.substring(0, end)
-//    if(line.charAt(line.length - 1) == '/')
-//        line = line.substring(0, line.length - 1);
-//    if(line.charAt(0) == '/')
-//        line = title + line;
-//    for(end = line.indexOf("/") ; end != -1; end = line.indexOf("/"))
-//        line = line.substring(end + 1);
-//    return line;
-//}
-
-//force a page name to use appropriate capitalization
+// Force a page name to use appropriate capitalization
 vbd.forceCaps = function(title, isRoot) {
     if (isRoot)
         return vbd.forceTitleCaps(title);
@@ -187,7 +97,8 @@ vbd.forceCaps = function(title, isRoot) {
         return vbd.forceFirstCaps(title);
 }
 
-// Determines if the word needs to be capitalized. Returns 1 if it should be, 0 otherwise.
+// Determines if the word needs to be capitalized. Returns 1 if it should be, 0
+// otherwise.
 vbd.isRealWord = function (word) {
     var preps = new Array('the', 'in', 'of', 'for', 'to', 'is', 'a', 'an');
     for(var i = 0; i < preps.length; i++)
@@ -207,7 +118,8 @@ vbd.forceTitleCaps = function(title) {
     return title;
 }
 
-//page names are forced to have the first letter capitalized, but are not forced to have title-caps
+// Page names are forced to have the first letter capitalized, but are not
+// forced to have title-caps
 vbd.forceFirstCaps = function(title) {
   title.replace("_", " ");
   return title.charAt(0).toUpperCase() + title.slice(1);
