@@ -275,7 +275,15 @@ EOD;
 
             $lines = explode("\n", $text);
             $this->bookname = $lines[0];
+            # TODO: Parse the list of pages/headings into some kind of PHP-friendly
+            #       array or structure first, instead of parsing it and creating it
+            #       all in one swoop
+            # TODO: Show the user a list of pages to create, with checkboxes to confirm
+            #       creation of all these pages.
             $this->parseBookPage($lines[0], $this->namespace . $lines[0], $lines, 1);
+            # TODO: Show statistics (number of pages created, total time, etc) Here
+            # TODO: Show an "Oops!" delete/undo link here that goes back over the list of pages
+            #       and deletes them all again (if the user is an admin)
             if ($this->autogentemp) {
                 $this->generateHeaderTemplate($this->bookname);
             }
