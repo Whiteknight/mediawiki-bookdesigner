@@ -198,6 +198,7 @@ class BookDesigner extends SpecialPage {
 
     # Returns an EXTREMELY basic text string for creating a header template.
     # TODO: Make this less bare-bones
+    # TODO: Make this user-configurable
     function getTemplateText($bookname) {
         $text = <<<EOD
 
@@ -245,6 +246,7 @@ EOD;
 
     # Main function, this is where execution starts
     function execute( $par ) {
+        # TODO: Refactor all this.
         global $wgRequest, $wgOut, $wgScriptPath;
         $this->setHeaders();
         $wgOut->setPageTitle("Book Designer");
@@ -289,6 +291,8 @@ EOD;
             }
         }
         else {
+            # TODO: Have a hidden field somewhere that we can hold a list of
+            #       pages for pre-populating the outline.
             $text = <<<EOD
 
 <form action="{$wgScriptPath}/index.php?title=Special:BookDesigner" method="POST">
