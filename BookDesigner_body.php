@@ -246,13 +246,94 @@ EOD;
 
     # Main function, this is where execution starts
     function execute( $par ) {
-        # TODO: Refactor all this.
-        global $wgRequest, $wgOut, $wgScriptPath;
+        # TODO: Validate that we are logged in. Also, create an option to
+        #       require certain permissions (either admin, or a custom
+        #       permission or something)
+        global $wgRequest, $wgOut;
         $this->setHeaders();
         $wgOut->setPageTitle("Book Designer");
+
+        $mode = "outline";
+        $title = null;
+        if(isset($par)) {
+            $parts = explode('/', $par, 2);
+            $mode = $parts[0];
+            $title = $parts[0];
+        }
+        if($wgRequest->wasPosted()) {
+            if ($mode == 'verify') {
+                $this->verifyPublishOutline();
+            }
+            else if ($mode == 'publish') {
+                $this->reallyPublishOutline();
+            }
+            else {
+                $this->unknownModeError('post', $mode, $title);
+            }
+        }
+        else {
+            # TODO: we've specified a book name, load that book into the outline
+            #       $mode == 'outline' creates an empty outline with "title"
+            #       $mode == 'preload' attempts to load an existing outline
+            if (!isset($mode) || $mode == "" || $mode == "outline" || $mode == "preload") {
+                $this->displayMainOutline($mode, $title);
+            }
+            else {
+                $this->unknownModeError('show', $mode, $title);
+            }
+        }
+    }
+
+    function unknownModeError($type, $mode, $title) {
+        global $wgOut;
+        $title_extra = "";
+        if (isset($title)) {
+            $title_extra = "with arguments (" . $title . ")";
+        }
+        $text = <<<EOD
+<p>
+    <span style='color: darkred; font-weight: bold;'>Error:</span>
+    Could not {$type} with mode {$mode} $title_extra
+</p>
+
+EOD;
+        $wgOut->addHTML($text);
+    }
+
+    function verifyPublishOutline() {
+        # TODO: Parse the outline, and generate an output page for verification
+        #       The output page should show a list of all pages. Each page
+        #       should have:
+        #       1) A checkbox, to determine if we really publish it
+        #       2)
+
+    function reallyPublishOutline() {
+        global $wgRequest;
+        $text = $wgRequest->getText('VBDHiddenTextArea');
+        $this->getOptions();
+
+        $lines = explode("\n", $text);
+        $this->bookname = $lines[0];
+        # TODO: Parse the list of pages/headings into some kind of
+        #       PHP-friendly array or structure first, instead of parsing
+        #       it and creating it all in one swoop
+        # TODO: Show the user a list of pages to create, with checkboxes to
+        #       confirm creation of all these pages.
+        $this->parseBookPage($lines[0], $this->namespace . $lines[0], $lines, 1);
+        # TODO: Show statistics (number of pages created, total time, etc)
+        #       here
+        # TODO: Show an "Oops!" delete/undo link here that goes back over
+        #       the list of pages and deletes them all again (if the user
+        #       is an admin)
+        if ($this->autogentemp) {
+            $this->generateHeaderTemplate($this->bookname);
+        }
+    }
+
+    function displayMainOutline() {
+        global $wgOut, $wgScriptPath;
         $jspath  = "$wgScriptPath/extensions/BookDesigner";
         $csspath = "$wgScriptPath/extensions/BookDesigner";
-
         $wgOut->addScriptFile($jspath . "/bookpage.js");
         $wgOut->addScriptFile($jspath . "/pagehead.js");
         $wgOut->addScriptFile($jspath . "/designer.js");
@@ -265,40 +346,11 @@ EOD;
             $wgOut->addStyle("../extensions/BookDesigner/designer.css");
         }
 
-        if(isset($par)) {
-            # TODO: we've specified a book name, load that book into the outline
-            $wgOut->addHTML($par);
-        }
-        else if($wgRequest->wasPosted()) {
-            # TODO: Validate that we are logged in. Also, create an option to
-            #       require certain permissions (either admin, or a custom
-            #       permission or something)
-            $text = $wgRequest->getText('VBDHiddenTextArea');
-            $this->getOptions();
+        # TODO: Have a hidden field somewhere that we can hold a list of
+        #       pages for pre-populating the outline.
+        $text = <<<EOD
 
-            $lines = explode("\n", $text);
-            $this->bookname = $lines[0];
-            # TODO: Parse the list of pages/headings into some kind of
-            #       PHP-friendly array or structure first, instead of parsing
-            #       it and creating it all in one swoop
-            # TODO: Show the user a list of pages to create, with checkboxes to
-            #       confirm creation of all these pages.
-            $this->parseBookPage($lines[0], $this->namespace . $lines[0], $lines, 1);
-            # TODO: Show statistics (number of pages created, total time, etc)
-            #       here
-            # TODO: Show an "Oops!" delete/undo link here that goes back over
-            #       the list of pages and deletes them all again (if the user
-            #       is an admin)
-            if ($this->autogentemp) {
-                $this->generateHeaderTemplate($this->bookname);
-            }
-        }
-        else {
-            # TODO: Have a hidden field somewhere that we can hold a list of
-            #       pages for pre-populating the outline.
-            $text = <<<EOD
-
-<form action="{$wgScriptPath}/index.php?title=Special:BookDesigner" method="POST">
+<form action="{$wgScriptPath}/index.php?title=Special:BookDesigner/verify" method="POST">
     <textarea name="VBDHiddenTextArea" id="VBDHiddenTextArea" style="display: none;">
     </textarea>
     <div id="VBDWelcomeSpan">
@@ -380,13 +432,15 @@ EOD;
     <div id="VBDOutlineSpan">
         {$this->GetMessage('jserror')}
     </div>
-    <input type="submit" value="{$this->GetMessage('publishbutton')}"/><br>
-    <!--
-    TODO: This is a temporary addition to aid in debugging. It shows the
-          intermediate code before it's transmitted to the server. This way if
-          there is some kind of a server error, we can save a copy of that
-          intermediate code to a safe place so when we are making a huge outline
-          we don't lose all that work. No i18n for debug stuff.
+    <!-- TODO: Add another button here to "save" an incomplete outline to a page
+         somewhere in userspace, and maybe a button somewhere to "load" an
+         existing outline. -->
+    <input type="submit" value="{$this->GetMessage('publishbutton')}" /><br>
+    <!-- TODO: This is a temporary addition to aid in debugging. It shows the
+         intermediate code before it's transmitted to the server. This way if
+         there is some kind of a server error, we can save a copy of that
+         intermediate code to a safe place so when we are making a huge outline
+         we don't lose all that work. No i18n for debug stuff.
     -->
     <small>
         <a href="#" onclick="document.getElementById('VBDHiddenTextArea').style.display = 'block';">
@@ -396,9 +450,7 @@ EOD;
 </form>
 
 EOD;
-            $wgOut->addHTML($par);
-            $wgOut->addHTML($text);
-        }
+        $wgOut->addHTML($text);
     }
 }
 
