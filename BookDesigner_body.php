@@ -20,9 +20,9 @@ class BookDesigner extends SpecialPage {
     protected $createlicensing    = false;
     protected $namespace          = "";
 
-    # Quick and dirty debugging utilities. The value of $this->debug determines whether
-    # we print something. These functions can probably disappear soon since the
-    # parseBookPage parser routine has been mostly tested.
+    # Quick and dirty debugging utilities. The value of $this->debug determines
+    # whether we print something. These functions can probably disappear soon
+    # since the parseBookPage parser routine has been mostly tested.
     function _dbg($word) {
         global $wgOut;
         if($this->debug)
@@ -75,8 +75,8 @@ class BookDesigner extends SpecialPage {
     # this, and yes this is ugly and stupid and ugly. Whatever, this is what
     # we have.
     # [] contain lists of pages. {} contain lists of headings. Each page has[]{}
-    # and each heading has only []. Each bare line of text inside a set of brackets
-    # is that type of thing. Empty lines are ignored.
+    # and each heading has only []. Each bare line of text inside a set of
+    # brackets is that type of thing. Empty lines are ignored.
     function parseBookPage($page, $path, $lines, $idx) {
         global $wgOut, $wgScriptPath;
         $isroot = ($idx == 1);
@@ -270,22 +270,25 @@ EOD;
             $wgOut->addHTML($par);
         }
         else if($wgRequest->wasPosted()) {
-            # TODO: Validate that we are logged in. Also, create an option to require
-            #       certain permissions (either admin, or a custom permission or something)
+            # TODO: Validate that we are logged in. Also, create an option to
+            #       require certain permissions (either admin, or a custom
+            #       permission or something)
             $text = $wgRequest->getText('VBDHiddenTextArea');
             $this->getOptions();
 
             $lines = explode("\n", $text);
             $this->bookname = $lines[0];
-            # TODO: Parse the list of pages/headings into some kind of PHP-friendly
-            #       array or structure first, instead of parsing it and creating it
-            #       all in one swoop
-            # TODO: Show the user a list of pages to create, with checkboxes to confirm
-            #       creation of all these pages.
+            # TODO: Parse the list of pages/headings into some kind of
+            #       PHP-friendly array or structure first, instead of parsing
+            #       it and creating it all in one swoop
+            # TODO: Show the user a list of pages to create, with checkboxes to
+            #       confirm creation of all these pages.
             $this->parseBookPage($lines[0], $this->namespace . $lines[0], $lines, 1);
-            # TODO: Show statistics (number of pages created, total time, etc) Here
-            # TODO: Show an "Oops!" delete/undo link here that goes back over the list of pages
-            #       and deletes them all again (if the user is an admin)
+            # TODO: Show statistics (number of pages created, total time, etc)
+            #       here
+            # TODO: Show an "Oops!" delete/undo link here that goes back over
+            #       the list of pages and deletes them all again (if the user
+            #       is an admin)
             if ($this->autogentemp) {
                 $this->generateHeaderTemplate($this->bookname);
             }
@@ -296,7 +299,8 @@ EOD;
             $text = <<<EOD
 
 <form action="{$wgScriptPath}/index.php?title=Special:BookDesigner" method="POST">
-    <textarea name="VBDHiddenTextArea" id="VBDHiddenTextArea" style="display: none;"></textarea>
+    <textarea name="VBDHiddenTextArea" id="VBDHiddenTextArea" style="display: none;">
+    </textarea>
     <div id="VBDWelcomeSpan">
         {$this->GetMessage('welcome')}
     </div>
@@ -317,7 +321,8 @@ EOD;
     <div id="VBDOptionsSpan">
         <h2>
             <span style="float: right; font-size: 67%;">
-                [<a id="VBDOptionsToggle" onclick="vbd.ToggleGUIWidget('VBDOptionsInternal', 'VBDOptionsToggle');"><!--
+                [<a id="VBDOptionsToggle"
+                    onclick="vbd.ToggleGUIWidget('VBDOptionsInternal', 'VBDOptionsToggle');"><!--
                     -->{$this->GetMessage('show')}<!--
                 --></a>]
             </span>
@@ -325,23 +330,51 @@ EOD;
         </h2>
         <div id="VBDOptionsInternal" style="display: none;">
             <b>{$this->GetMessage('optsbook')}</b><br>
-            <input type="checkbox" name="optUseNamespace">{$this->GetMessage('optusenamespace')}:</input><br>
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" name="optNamespace"/><br>
-            <input type="checkbox" name="optUseUserSpace" disabled>{$this->GetMessage('optuseuserspace')}</input><br>
-            <input type="checkbox" name="optIntroductionPage">{$this->GetMessage('optintroductionpage')}</input><br>
-            <input type="checkbox" name="optResourcesPage">{$this->GetMessage('optresourcespage')}</input><br>
-            <input type="checkbox" name="optLicensingPage">{$this->GetMessage('optlicensingpage')}</input><br>
+            <input type="checkbox" name="optUseNamespace">
+                {$this->GetMessage('optusenamespace')}:
+            </input><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <input type="text" name="optNamespace"/><br>
+            <input type="checkbox" name="optUseUserSpace" disabled>
+                {$this->GetMessage('optuseuserspace')}
+            </input><br>
+            <input type="checkbox" name="optIntroductionPage">
+                {$this->GetMessage('optintroductionpage')}
+            </input><br>
+            <input type="checkbox" name="optResourcesPage">
+                {$this->GetMessage('optresourcespage')}
+            </input><br>
+            <input type="checkbox" name="optLicensingPage">
+                {$this->GetMessage('optlicensingpage')}
+            </input><br>
 
-            <b>{$this->GetMessage('optspage')}</b><br>
-            <input type="checkbox" name="optCreateLeaves" checked>{$this->GetMessage('optcreateleaf')}</input><br>
-            <input type="checkbox" name="optNumberPages">{$this->GetMessage('optnumberpages')}</input><br>
+            <b>
+                {$this->GetMessage('optspage')}
+            </b><br>
+            <input type="checkbox" name="optCreateLeaves" checked>
+                {$this->GetMessage('optcreateleaf')}
+            </input><br>
+            <input type="checkbox" name="optNumberPages">
+                {$this->GetMessage('optnumberpages')}
+            </input><br>
 
-            <b>{$this->GetMessage('optstemplate')}</b><br>
-            <input type="checkbox" name="optHeaderTemplate" checked>{$this->GetMessage('optheadertemplate')}</input>
-            <input type="checkbox" name="optAutogenHeaderTemplate">{$this->GetMessage('optautogenerate')}</input><br>
-            <input type="checkbox" name="optFooterTemplate" disabled>{$this->GetMessage('optfootertemplate')}</input>
-            <input type="checkbox" name="optAutogenFooterTemplate" disabled>{$this->GetMessage('optautogenerate')}</input><br>
-            <!-- TODO: Add a <select> item here with a list of auto-generate template styles -->
+            <b>
+                {$this->GetMessage('optstemplate')}
+            </b><br>
+            <input type="checkbox" name="optHeaderTemplate" checked>
+                {$this->GetMessage('optheadertemplate')}
+            </input>
+            <input type="checkbox" name="optAutogenHeaderTemplate">
+                {$this->GetMessage('optautogenerate')}
+            </input><br>
+            <input type="checkbox" name="optFooterTemplate" disabled>
+                {$this->GetMessage('optfootertemplate')}
+            </input>
+            <input type="checkbox" name="optAutogenFooterTemplate" disabled>
+                {$this->GetMessage('optautogenerate')}
+            </input><br>
+            <!-- TODO: Add a <select> item here with a list of auto-generate
+                       template styles -->
         </div>
     </div>
     <div id="VBDOutlineSpan">
@@ -356,7 +389,9 @@ EOD;
           we don't lose all that work. No i18n for debug stuff.
     -->
     <small>
-        <a href="#" onclick="document.getElementById('VBDHiddenTextArea').style.display = 'block';">Show Intermediate Code</a>
+        <a href="#" onclick="document.getElementById('VBDHiddenTextArea').style.display = 'block';">
+            Show Intermediate Code
+        </a>
     </small>
 </form>
 
