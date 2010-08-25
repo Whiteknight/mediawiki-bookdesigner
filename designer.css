@@ -41,3 +41,24 @@ div#VBDPageHeadingContainer {
     border-bottom: 1px dashed #AAAAAA;
     border-left: 1px dashed #AAAAAA;
 }
+
+div.VBDPageTextDiv {
+    margin: 5px;
+    border: 1px solid #2222CC;
+    background-color: #CCCCFF;
+    padding: 5px;
+}
+
+div.VBDCreateSuccess {
+    margin: 5px;
+    border: 1px solid #22CC22;
+    background-color: #EEFFEE;
+    padding: 5px;
+}
+
+div.VBDCreateIgnored {
+    margin: 5px;
+    border: 1px solid #CC2222;
+    background-color: #FFEEEE;
+    padding: 5px;
+}

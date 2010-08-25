@@ -10,15 +10,55 @@ class BookDesigner extends SpecialPage {
 
     # Internal values. Don't modify them, they get set at runtime
     protected $bookname           = "";
-    protected $createleaves       = false;
-    protected $usetemplates       = false;
-    protected $numberpages        = false;
-    protected $usenamespace       = false;
-    protected $autogentemp        = false;
-    protected $createintroduction = false;
-    protected $createresources    = false;
-    protected $createlicensing    = false;
-    protected $namespace          = "";
+    protected $options            = array(
+        "CreateLeaves" => true,
+        "UseHeader" => true,
+        "UseFooter" => false,
+        "NumberPages" => false,
+        "UseNamespace" => false,
+        "GenerateHeader" => false,
+        "GenerateFooter" => false,
+        "UseIntroduction" => true,
+        "UseResources" => false,
+        "UseLicensing" => true
+    );
+    protected $namespace = "";
+
+    function GetOption($name) {
+        return $this->options[$name];
+    }
+
+    function GetOptionCheckbox($name)
+    {
+        return $this->options[$name] ? "checked" : "";
+    }
+
+    function SetOption($name, $value)
+    {
+        $this->options[$name] = $value;
+    }
+
+    function getHeaderTemplateTag() {
+        return $this->getOption('UseHeader') ? "{{" . $this->bookname . "}}\n\n" : "";
+    }
+
+    function getPageHeadText($isroot)
+    {
+        $text = $this->getHeaderTemplateTag();
+        if ($isroot && $this->getOption('UseIntroduction'))
+            $text .= "\n\n*[[" . $this->bookname . "/Introduction|Introduction]]\n";
+        return $text;
+    }
+
+    function getPageFootText($isroot)
+    {
+        $text = "\n\n";
+        if ($isroot && $this->getOption('UseResources'))
+            $text .= "*[[" . $this->bookname . "/Resources|Resources]]\n";
+        if ($isroot && $this->getOption('UseLicensing'))
+            $text .= "*[[" . $this->bookname . "/Licensing|Licensing]]\n";
+        return $text . $this->getFooterTemplateTag();
+    }
 
     # Quick and dirty debugging utilities. The value of $this->debug determines
     # whether we print something. These functions can probably disappear soon
@@ -32,43 +72,43 @@ class BookDesigner extends SpecialPage {
         $this->_dbg($word . "<br/>");
     }
 
-    function GetHeaderTemplateTag() {
-        return $this->usetemplates ? "{{" . $this->bookname . "}}\n\n" : "";
-    }
-
-    function GetFooterTemplateTag() {
+    function getFooterTemplateTag() {
+        # TODO: Add an option to specify a footer tag
         return "";
     }
 
     function GetCreateFlag($isroot) {
-        $create = $this->createleaves || $isroot;
-        $this->_dbgl("Creating leaf page: " . ($createleaf ? "1" : "0"));
+        $create = $this->getOption('CreateLeaves') || $isroot;
         return $create;
     }
 
-    function CreateIntroduction($isroot) {
-        if ($isroot && $this->createintroduction) {
-            $text = $this->GetHeaderTemplateTag() . $this->GetFooterTemplateTag();
-            $this->CreateOnePage($this->bookname . "/Introduction", $text, "Creating Introduction page");
-            return "*[[" . $this->bookname . "/Introduction|Introduction]]\n";
-        }
-        return "";
+    function addPageToList(&$pagelist, $pagename, $fullname, $pagetext, $create)
+    {
+        $pagelist[] = array(
+            "name" => $pagename,
+            "fullname" => $fullname,
+            "text" => $pagetext,
+            "create" => $create
+        );
+        $this->_dbgl("Adding page $fullname");
     }
-    function CreateResources($isroot) {
-        if ($isroot && $this->createresources) {
-            $text = $this->GetHeaderTemplateTag() . $this->GetFooterTemplateTag();
-            $this->CreateOnePage($this->bookname . "/Resources", $text, "Creating Resources page");
-            return "*[[" . $this->bookname . "/Resources|Resources]]\n";
-        }
-        return "";
+
+    function getIntroductionPageText() {
+        return $this->GetHeaderTemplateTag() .
+            "\n\n" .
+             $this->GetFooterTemplateTag();
     }
-    function CreateLicensing($isroot) {
-        if ($isroot && $this->createlicensing) {
-            $text = $this->GetHeaderTemplateTag() . $this->GetFooterTemplateTag();
-            $this->CreateOnePage($this->bookname . "/Licensing", $text, "Creating Licensing page");
-            return "*[[" . $this->bookname . "/Licensing|Licensing]]\n";
-        }
-        return "";
+
+    function getResourcesPageText() {
+        return $this->GetHeaderTemplateTag() .
+            "\n\n" .
+             $this->GetFooterTemplateTag();
+    }
+
+    function getLicensingPageText() {
+        return $this->GetHeaderTemplateTag() .
+            "\n\n" .
+             $this->GetFooterTemplateTag();
     }
 
     # Home-brewed recursive descent parser. Yes there are better ways of doing
@@ -77,17 +117,16 @@ class BookDesigner extends SpecialPage {
     # [] contain lists of pages. {} contain lists of headings. Each page has[]{}
     # and each heading has only []. Each bare line of text inside a set of
     # brackets is that type of thing. Empty lines are ignored.
-    function parseBookPage($page, $path, $lines, $idx) {
+    function parseBookPage(&$pagelist, $page, $path, $lines, $idx) {
         global $wgOut, $wgScriptPath;
         $isroot = ($idx == 1);
         $subpagenum = 0;
-        $pagetext = $this->GetHeaderTemplateTag() . $this->CreateIntroduction($isroot);
+        $pagetext = $this->getPageHeadText($isroot);
         $createleaf = $this->GetCreateFlag($isroot);
-
         # Loop over all subpages inside [] brackets
         for($i = $idx; $i < sizeof($lines); $i++) {
             $line = rtrim($lines[$i]);
-            $this->_dbg("Line " . $i . ": " . $line . "> ");
+            $this->_dbg("($path) Line $i: '$line'> ");
             if($line == '[') {
                 $this->_dbgl("Ignored");
                 continue;
@@ -106,11 +145,11 @@ class BookDesigner extends SpecialPage {
                 # We have a page name
                 $this->_dbgl("Recurse");
                 $subpagenum++;
-                $name = ($this->numberpages ? $subpagenum . ". " : "") . $line;
+                $name = ($this->getOption('NumberPages') ? $subpagenum . ". " : "") . $line;
                 $createpage = TRUE;
                 $newpath = $path . "/" . $name;
                 $pagetext .= "*[[" . $newpath . "|" . $name . "]]\n";
-                $i = $this->parseBookPage($name, $newpath, $lines, $i + 1);
+                $i = $this->parseBookPage($pagelist, $name, $newpath, $lines, $i + 1);
             }
         }
         $pagetext .= "\n";
@@ -118,7 +157,7 @@ class BookDesigner extends SpecialPage {
         # Loop over all headings inside {} brackets
         for($i = $idx; $i < sizeof($lines); $i++) {
             $line = rtrim($lines[$i]);
-            $this->_dbg("Line " . $i . ": " . $line . "> ");
+            $this->_dbg("($path) Line $i: '$line'> ");
             if($line == '{') {
                 $this->_dbgl("Ignored");
                 continue;
@@ -155,15 +194,13 @@ class BookDesigner extends SpecialPage {
                 $this->_dbgl("Heading-Subpage");
                 $newpath = $path . "/" . $line2;
                 $pagetext .= "*[[" . $newpath . "|" . $line2 . "]]\n";
-                $i = $this->parseBookPage($line2, $newpath, $lines, $i + 1);
+                $j = $i + 1;
+                $i = $this->parseBookPage($pagelist, $line2, $newpath, $lines, $i + 1);
             }
         }
 
         # Get the rest of the text, most of which is optional
-        $pagetext = $pagetext .
-            $this->CreateResources($isroot) .
-            $this->CreateLicensing($isroot) .
-            $this->GetFooterTemplateTag();
+        $pagetext = $pagetext . $this->getPageFootText($isroot);
 
         # We've parsed all direct subpages and all headings (and all subpages
         # of those). We have all the information we need now to actually create
@@ -171,29 +208,18 @@ class BookDesigner extends SpecialPage {
         # We only create the page if (1) we opt to create all pages, (2) the
         # page contains subpages, (3) the page contains headings, or (4) it is
         # the main page.
-        if ($createleaf)
-            $this->CreateOnePage($path, $pagetext, "Creating new book automatically");
+        $this->addPageToList($pagelist, $page, $path, $pagetext, $createleaf);
         return $idx;
     }
 
-    function CreateOnePage($path, $text, $comment)
+    function createOnePage($path, $text)
     {
         global $wgOut, $wgScriptPath;
         $title = Title::newFromText($path);
         $article = new Article($title);
-        $article->doEdit($text, $comment);
-        $wgOut->addHTML("Created <a href=\"$wgScriptPath/index.php?title=$path\">$path</a><br/>");
-    }
-
-    # Build the header template
-    function generateHeaderTemplate( $bookname ) {
-        global $wgOut, $wgScriptPath;
-        $name = "Template:" . $bookname;
-        $title = Title::newFromText($name);
-        $article = new Article($title);
-        $text = $this->getTemplateText($bookname);
-        $article->doEdit($text, "Creating header template for " . $bookname);
-        $wgOut->addHTML("Created <a href=\"$wgScriptPath/index.php?title=$name\">$name</a><br/>");
+        $article->doEdit($text, "Creating page for book '{$this->bookname}'. " .
+            "Automated page creation by BookDesigner");
+        return $title;
     }
 
     # Returns an EXTREMELY basic text string for creating a header template.
@@ -203,9 +229,9 @@ class BookDesigner extends SpecialPage {
         $text = <<<EOD
 
 <div style="border: 1px solid #AAAAAA; background-color: #F8F8F8; padding: 5px; margin: auto; width: 95%">
-    <center>
-        <big>'''[[$bookname]]'''</big>
-    </center>
+<center>
+<big>'''[[$bookname]]'''</big>
+</center>
 </div>
 
 EOD;
@@ -214,30 +240,17 @@ EOD;
 
     function getOptions() {
         global $wgRequest;
-        $this->createleaves = $wgRequest->getCheck("optCreateLeaves");
-        $this->_dbgl("Create leaves: " . ($this->createleaves ? "1" : "0"));
+        $this->setOption("CreateLeaves", $wgRequest->getCheck("optCreateLeaves"));
+        $this->setOption("UseHeader", $wgRequest->getCheck("optHeaderTemplate"));
+        $this->setOption("NumberPages", $wgRequest->getCheck("optNumberPages"));
+        $this->setOption("UseNamespace", $wgRequest->getCheck("optUseNamespace"));
 
-        $this->usetemplates = $wgRequest->getCheck("optHeaderTemplate");
-        $this->_dbgl("Use Templates: " . ($this->usetemplates ? "1" : "0"));
-
-        $this->numberpages = $wgRequest->getCheck("optNumberPages");
-        $this->_dbgl("Number Pages: "  . ($this->numberpages  ? "1" : "0"));
-
-        $this->usenamespace = $wgRequest->getCheck("optUseNamespace");
-        $this->namespace = $this->usenamespace ? $wgRequest->getText("optNamespace") . ":" : "";
-        $this->_dbgl("Use Namespace: " . ($this->usenamespace ? "1" : "0") . " " . $this->namespace);
-
-        $this->autogentemp = $wgRequest->getCheck("optAutogenHeaderTemplate");
-        $this->_dbgl("Autogenerate Template: " . ($this->autogenemp ? "1" : "0"));
-
-        $this->createintroduction = $wgRequest->getCheck("optIntroductionPage");
-        $this->_dbgl("Create Introduction Page: " . ($this->createintroduction ? "1" : "0"));
-
-        $this->createresources = $wgRequest->getCheck("optResourcesPage");
-        $this->_dbgl("Create Resources Page: " . ($this->createresources ? "1" : "0"));
-
-        $this->createlicensing = $wgRequest->getCheck("optLicensingPage");
-        $this->_dbgl("Create Licensing Page: " . ($this->createlicensing ? "1" : "0"));
+        $this->namespace = $this->getOption('UseNamespace')
+            ? $wgRequest->getText("optNamespace") . ":" : "";
+        $this->setOption('GenerateHeader', $wgRequest->getCheck("optAutogenHeaderTemplate"));
+        $this->setOption('UseIntroduction', $wgRequest->getCheck("optIntroductionPage"));
+        $this->setOption('UseResources', $wgRequest->getCheck("optResourcesPage"));
+        $this->setOption('UseLicensing', $wgRequest->getCheck("optLicensingPage"));
     }
 
     function GetMessage($msgname) {
@@ -252,22 +265,26 @@ EOD;
         global $wgRequest, $wgOut;
         $this->setHeaders();
         $wgOut->setPageTitle("Book Designer");
+        $this->loadJSAndCSS();
 
         $mode = "outline";
         $title = null;
+
         if(isset($par)) {
             $parts = explode('/', $par, 2);
             $mode = $parts[0];
-            $title = $parts[0];
+            #$title = $parts[1];
         }
         if($wgRequest->wasPosted()) {
             if ($mode == 'verify') {
                 $this->verifyPublishOutline();
             }
             else if ($mode == 'publish') {
+                $this->_dbgl("publish");
                 $this->reallyPublishOutline();
             }
             else {
+                $this->_dbgl("post error");
                 $this->unknownModeError('post', $mode, $title);
             }
         }
@@ -292,7 +309,7 @@ EOD;
         }
         $text = <<<EOD
 <p>
-    <span style='color: darkred; font-weight: bold;'>Error:</span>
+    <span style='color: red; font-weight: bold;'>Error:</span>
     Could not {$type} with mode {$mode} $title_extra
 </p>
 
@@ -301,50 +318,192 @@ EOD;
     }
 
     function verifyPublishOutline() {
+        global $wgRequest;
         # TODO: Parse the outline, and generate an output page for verification
         #       The output page should show a list of all pages. Each page
         #       should have:
         #       1) A checkbox, to determine if we really publish it
-        #       2)
+        #       2) A textbox, showing the text of the page open to modification
 
-    function reallyPublishOutline() {
-        global $wgRequest;
-        $text = $wgRequest->getText('VBDHiddenTextArea');
-        $this->getOptions();
-
-        $lines = explode("\n", $text);
-        $this->bookname = $lines[0];
         # TODO: Parse the list of pages/headings into some kind of
         #       PHP-friendly array or structure first, instead of parsing
         #       it and creating it all in one swoop
         # TODO: Show the user a list of pages to create, with checkboxes to
         #       confirm creation of all these pages.
-        $this->parseBookPage($lines[0], $this->namespace . $lines[0], $lines, 1);
+        $text = $wgRequest->getText('VBDHiddenTextArea');
+        $lines = explode("\n", $text);
+        $this->bookname = $lines[0];
+        $this->getOptions();
+        $pagelist = array();
+        if ($this->getOption('UseHeader')) {
+            $this->addPageToList($pagelist, "Template:" . $this->bookname,
+                "Template:" . $this->bookname,
+                $this->getTemplateText($this->bookname),
+                true
+            );
+        }
+        if ($this->getOption('UseIntroduction')) {
+            $this->addPageToList($pagelist, "Introduction",
+                $this->bookname . "/Introduction",
+                $this->getIntroductionPageText(),
+                true
+            );
+        }
+        $this->parseBookPage($pagelist, $lines[0], $this->namespace . $lines[0], $lines, 1);
+        if ($this->getOption('UseResources')) {
+            $this->addPageToList($pagelist, "Resources",
+                $this->bookname . "/Resources",
+                $this->getResourcesPageText(),
+                true
+            );
+        }
+        if ($this->getOption('UseLicensing')) {
+            $this->addPageToList($pagelist, "Licensing",
+                $this->bookname . "/Licensing",
+                $this->getLicensingPageText(),
+                true
+            );
+        }
+        $this->showConfirmationPage($this->bookname, $pagelist);
+    }
+
+    function showConfirmationPage($bookname, $pagelist) {
+        global $wgOut, $wgScriptPath;
+        $jspath  = "$wgScriptPath/extensions/BookDesigner";
+        $wgOut->addScriptFile($jspath . "/designer.js");
+        $this->addCSSFile("designer.css");
+        $i = 0;
+        $text = <<<EOT
+<form action="{$wgScriptPath}/index.php?title=Special:BookDesigner/publish" method="POST">
+    <div>
+        <h2>
+            Confirm Pages for {$bookname}
+        </h2>
+        <p>
+            Below is a list of pages that will be created in your book. You can
+            select which pages to create, and you can modify the page text. You
+            cannot alter the structure of the book otherwise. Click
+            <b>Publish</b> if everything is ready to publish.
+        </p>
+    </div>
+EOT;
+        $wgOut->addHTML($text);
+        $numpages = count($pagelist);
+        foreach ($pagelist as &$page) {
+            $this->showPageSinglePageConfirmation($i, $page["name"],
+                $page["fullname"], $page["text"], $page["create"]);
+            $i++;
+        }
+        $wgOut->addHTML($this->getOptionsWidget());
+        $text = <<<EOT
+    <input type="submit" value="Publish" />
+    <a href="$wgScriptPath/index.php?title=Special:BookDesigner">
+        Cancel
+    </a>
+    <input type="hidden" name="VBDTotalPageCount" value="{$numpages}" />
+    <input type="hidden" name="VBDBookName" value="{$this->bookname}" />
+</form>
+EOT;
+        $wgOut->addHTML($text);
+    }
+
+    function showPageSinglePageConfirmation($idx, $name, $path, $text, $create) {
+        global $wgOut;
+        $checked = $create ? "checked" : "";
+        $text = <<<EOT
+        <div class="VBDConfirmPageDiv">
+            <input type="hidden" name="path_{$idx}" value="{$path}"/>
+            <input type="checkbox" name="confirm_{$idx}" {$checked}>
+                <span style='font-size: larger; font-weight: bold;'>
+                    {$path}
+                </span>
+            </input>
+            [<a id="text_toggle_{$idx}"
+                onclick="vbd.ToggleGUIWidget('text_div_{$idx}', 'text_toggle_{$idx}');"><!--
+                -->{$this->GetMessage('show')}<!--
+            --></a>]
+
+            <div class="VBDPageTextDiv" id="text_div_{$idx}" style="display: none;">
+                <textarea name="text_{$idx}" rows="10">{$text}</textarea>
+            </div>
+        </div>
+EOT;
+        $wgOut->addHTML($text);
+    }
+
+    function reallyPublishOutline() {
+        global $wgRequest, $wgOut;;
+        $numpages = $wgRequest->getInt('VBDTotalPageCount');
+        $this->bookname = $wgRequest->getText('VBDBookName');
+        $wgOut->addHTML("<ul>");
+        for ($i = 0; $i < $numpages; $i++) {
+            $path = $wgRequest->getText("path_{$i}");
+            $create = $wgRequest->getBool("confirm_{$i}");
+            $text = $wgRequest->getText("text_{$i}");
+            if (!$create) {
+                $this->showPageNotCreatedMessage($path);
+            } else {
+                $title = $this->createOnePage($path, $text);
+                $this->showPageCreatedMessage($path, $title);
+            }
+        }
+        $wgOut->addHTML("</ul>");
         # TODO: Show statistics (number of pages created, total time, etc)
         #       here
         # TODO: Show an "Oops!" delete/undo link here that goes back over
         #       the list of pages and deletes them all again (if the user
         #       is an admin)
-        if ($this->autogentemp) {
-            $this->generateHeaderTemplate($this->bookname);
+    }
+
+    function showPageNotCreatedMessage($path) {
+        global $wgOut;
+        $text = <<<EOT
+    <div class="VBDCreateIgnored">
+        <p>
+            Did not create $path
+        </p>
+    </div>
+EOT;
+        $wgOut->addHTML($text);
+    }
+
+    function showPageCreatedMessage($path, $title) {
+        global $wgOut;
+        $url = $title->getFullURL();
+        $text = <<<EOT
+    <div class="VBDCreateSuccess">
+        <p>
+            Created <a href="{$url}">$path</a>
+        </p>
+    </div>
+EOT;
+        $wgOut->addHTML($text);
+    }
+
+    function loadJSAndCSS() {
+        global $wgScriptPath, $wgOut;
+        $jspath  = "$wgScriptPath/extensions/BookDesigner";
+        $wgOut->addScriptFile($jspath . "/bookpage.js");
+        $wgOut->addScriptFile($jspath . "/pagehead.js");
+        $wgOut->addScriptFile($jspath . "/designer.js");
+        $this->addCSSFile("designer.css");
+    }
+
+    function addCSSFile($file) {
+        global $wgScriptPath, $wgOut;
+        $csspath = "$wgScriptPath/extensions/BookDesigner";
+        if(method_exists($wgOut, "addExtensionStyle")) {
+            $wgOut->addExtensionStyle($csspath . "/" . $file);
+        } else {
+            # This is a hack for older MediaWiki (1.14 and below?).
+            # addStyle prepends "$wgScriptPath/skins/" to the front,
+            # so we need to navigate to the correct place
+            $wgOut->addStyle("../extensions/BookDesigner/" . $file);
         }
     }
 
     function displayMainOutline() {
         global $wgOut, $wgScriptPath;
-        $jspath  = "$wgScriptPath/extensions/BookDesigner";
-        $csspath = "$wgScriptPath/extensions/BookDesigner";
-        $wgOut->addScriptFile($jspath . "/bookpage.js");
-        $wgOut->addScriptFile($jspath . "/pagehead.js");
-        $wgOut->addScriptFile($jspath . "/designer.js");
-        if(method_exists($wgOut, "addExtensionStyle")) {
-            $wgOut->addExtensionStyle($csspath . "/designer.css");
-        } else {
-            # This is a hack for older MediaWiki (1.14 and below?).
-            # addStyle prepends "$wgScriptPath/skins/" to the front,
-            # so we need to navigate to the correct place
-            $wgOut->addStyle("../extensions/BookDesigner/designer.css");
-        }
 
         # TODO: Have a hidden field somewhere that we can hold a list of
         #       pages for pre-populating the outline.
@@ -360,7 +519,8 @@ EOD;
     <div id="VBDInstructionSpan">
         <h2>
             <span style="float: right; font-size: 67%;">
-                [<a id="VBDQuickStartToggle" onclick="vbd.ToggleGUIWidget('VBDQuickStartInternal', 'VBDQuickStartToggle');"><!--
+                [<a id="VBDQuickStartToggle"
+                    onclick="vbd.ToggleGUIWidget('VBDQuickStartInternal', 'VBDQuickStartToggle');"><!--
                     -->{$this->GetMessage('hide')}<!--
                 --></a>]
             </span>
@@ -370,65 +530,7 @@ EOD;
             {$this->GetMessage('qsi')}
         </div>
     </div>
-    <div id="VBDOptionsSpan">
-        <h2>
-            <span style="float: right; font-size: 67%;">
-                [<a id="VBDOptionsToggle"
-                    onclick="vbd.ToggleGUIWidget('VBDOptionsInternal', 'VBDOptionsToggle');"><!--
-                    -->{$this->GetMessage('show')}<!--
-                --></a>]
-            </span>
-            {$this->GetMessage('options')}
-        </h2>
-        <div id="VBDOptionsInternal" style="display: none;">
-            <b>{$this->GetMessage('optsbook')}</b><br>
-            <input type="checkbox" name="optUseNamespace">
-                {$this->GetMessage('optusenamespace')}:
-            </input><br>
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            <input type="text" name="optNamespace"/><br>
-            <input type="checkbox" name="optUseUserSpace" disabled>
-                {$this->GetMessage('optuseuserspace')}
-            </input><br>
-            <input type="checkbox" name="optIntroductionPage">
-                {$this->GetMessage('optintroductionpage')}
-            </input><br>
-            <input type="checkbox" name="optResourcesPage">
-                {$this->GetMessage('optresourcespage')}
-            </input><br>
-            <input type="checkbox" name="optLicensingPage">
-                {$this->GetMessage('optlicensingpage')}
-            </input><br>
-
-            <b>
-                {$this->GetMessage('optspage')}
-            </b><br>
-            <input type="checkbox" name="optCreateLeaves" checked>
-                {$this->GetMessage('optcreateleaf')}
-            </input><br>
-            <input type="checkbox" name="optNumberPages">
-                {$this->GetMessage('optnumberpages')}
-            </input><br>
-
-            <b>
-                {$this->GetMessage('optstemplate')}
-            </b><br>
-            <input type="checkbox" name="optHeaderTemplate" checked>
-                {$this->GetMessage('optheadertemplate')}
-            </input>
-            <input type="checkbox" name="optAutogenHeaderTemplate">
-                {$this->GetMessage('optautogenerate')}
-            </input><br>
-            <input type="checkbox" name="optFooterTemplate" disabled>
-                {$this->GetMessage('optfootertemplate')}
-            </input>
-            <input type="checkbox" name="optAutogenFooterTemplate" disabled>
-                {$this->GetMessage('optautogenerate')}
-            </input><br>
-            <!-- TODO: Add a <select> item here with a list of auto-generate
-                       template styles -->
-        </div>
-    </div>
+    {$this->getOptionsWidget()}
     <div id="VBDOutlineSpan">
         {$this->GetMessage('jserror')}
     </div>
@@ -451,6 +553,89 @@ EOD;
 
 EOD;
         $wgOut->addHTML($text);
+    }
+
+    function getOptionsWidget() {
+        # TODO: Toggle the options based on the value of fields in the class
+        $text = <<<EOD
+<div id="VBDOptionsSpan">
+        <h2>
+            <span style="float: right; font-size: 67%;">
+                [<a id="VBDOptionsToggle"
+                    onclick="vbd.ToggleGUIWidget('VBDOptionsInternal', 'VBDOptionsToggle');"><!--
+                    -->{$this->GetMessage('show')}<!--
+                --></a>]
+            </span>
+            {$this->GetMessage('options')}
+        </h2>
+        <div id="VBDOptionsInternal" style="display: none;">
+            <b>{$this->GetMessage('optsbook')}</b><br>
+            <input type="checkbox" name="optUseNamespace"
+                {$this->getOptionCheckbox('UseNamespace')}>
+                {$this->GetMessage('optusenamespace')}:
+            </input>
+            <br>
+            <input type="text" style="margin-left: 6em;" name="optNamespace"
+                value="{$this->namespace}">
+            <br>
+            <input type="checkbox" name="optUseUserSpace" disabled>
+                {$this->GetMessage('optuseuserspace')}
+            </input>
+            <br>
+            <input type="checkbox" name="optIntroductionPage"
+                {$this->getOptionCheckbox('UseIntroduction')}>
+                {$this->GetMessage('optintroductionpage')}
+            </input>
+            <br>
+            <input type="checkbox" name="optResourcesPage"
+                {$this->getOptionCheckbox('UseResources')}>
+                {$this->GetMessage('optresourcespage')}
+            </input>
+            <br>
+            <input type="checkbox" name="optLicensingPage"
+                {$this->getOptionCheckbox('UseLicensing')}>
+                {$this->GetMessage('optlicensingpage')}
+            </input>
+            <br>
+            <b>
+                {$this->GetMessage('optspage')}
+            </b>
+            <br>
+            <input type="checkbox" name="optCreateLeaves"
+                {$this->getOptionCheckbox('CreateLeaves')}>
+                {$this->GetMessage('optcreateleaf')}
+            </input>
+            <br>
+            <input type="checkbox" name="optNumberPages"
+                {$this->getOptionCheckbox('NumberPages')}>
+                {$this->GetMessage('optnumberpages')}
+            </input>
+            <br>
+            <b>
+                {$this->GetMessage('optstemplate')}
+            </b>
+            <br>
+            <input type="checkbox" name="optHeaderTemplate"
+                {$this->getOptionCheckbox('UseHeader')}>
+                {$this->GetMessage('optheadertemplate')}
+            </input>
+            <input type="checkbox" name="optAutogenHeaderTemplate"
+                {$this->getOptionCheckbox('GenerateHeader')}>
+                {$this->GetMessage('optautogenerate')}
+            </input>
+            <br>
+            <input type="checkbox" name="optFooterTemplate" disabled>
+                {$this->GetMessage('optfootertemplate')}
+            </input>
+            <input type="checkbox" name="optAutogenFooterTemplate" disabled>
+                {$this->GetMessage('optautogenerate')}
+            </input>
+            <!-- TODO: Add a <select> item here with a list of auto-generate
+                       template styles -->
+        </div>
+    </div>
+EOD;
+        return $text;
     }
 }
 
