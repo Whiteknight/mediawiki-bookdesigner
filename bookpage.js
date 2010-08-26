@@ -295,7 +295,8 @@ BookPage.prototype.closeButton = function () {
 // Prepare the text to save a subpage from the outline. Create the intermediate
 // code form that is sent to the server for processing.
 BookPage.prototype.makeSaveText = function () {
-    var text = this.pagename + "\n";
+    var children = this.subpages.length + this.headings.length;
+    var text = "<page name='" + this.pagename + "' children='" + children + "'>\n";
   //if(this.pagetext.length != 0) {
   //  var pagetext = this.pagetext;
   //  pagetext.replace(/\n/g, "\n&");
@@ -306,13 +307,11 @@ BookPage.prototype.makeSaveText = function () {
   //  comments.replace(/\n/g, "\n%");
   //  text += "%" + this.comments + "\n";
   //}
-    text += "[\n";
     for(var i = 0; i < this.subpages.length; i++)
         text += this.subpages[i].makeSaveText();
-    text += "\n]\n{\n";
     for(var i = 0; i < this.headings.length; i++)
         text += this.headings[i].makeSaveText();
-    return text + "\n}\n";
+    return text + "</page>\n";
 }
 
 //make additional links for the main page

@@ -86,7 +86,7 @@ class BookDesigner extends SpecialPage {
 
     function getFooterTemplateTag() {
         # TODO: Add an option to specify a footer tag
-        return "";
+        return "{{" . $this->bookname . "/Footer}}";
     }
 
     function GetCreateFlag($isroot) {
@@ -94,8 +94,11 @@ class BookDesigner extends SpecialPage {
         return $create;
     }
 
-    function addPageToList(&$pagelist, $pagename, $fullname, $pagetext, $create) {
-        $pagelist[] = array(
+    function addPageToList($pagename, $fullname, $pagetext, $numchildren) {
+        $create = $this->getOption('CreateLeaves');
+        if (!$create)
+            $create = ($numchildren > 0);
+        $this->pagelist[] = array(
             "name"     => $pagename,
             "fullname" => $fullname,
             "text"     => $pagetext,
@@ -122,105 +125,102 @@ class BookDesigner extends SpecialPage {
              $this->GetFooterTemplateTag();
     }
 
-    # Home-brewed recursive descent parser. Yes there are better ways of doing
-    # this, and yes this is ugly and stupid and ugly. Whatever, this is what
-    # we have.
-    # [] contain lists of pages. {} contain lists of headings. Each page has[]{}
-    # and each heading has only []. Each bare line of text inside a set of
-    # brackets is that type of thing. Empty lines are ignored.
-    function parseBookPage(&$pagelist, $page, $path, $lines, $idx) {
+    protected $pagestack = array();
+    protected $currentpage = null;
+    protected $pagelist = array();
+
+    # push a new page onto the stack, and set it as the current. Return the
+    # object with information about the page
+    function startPage($name, $children) {
+        $num = sizeof($this->pagestack);
+        $fullname = $name;
+        $isroot = true;
+        $this->_dbgl("Starting page $name, $isroot");
+        if ($num > 0) {
+            $isroot = false;
+            $lastpage = $this->pagestack[sizeof($this->pagestack) - 1];
+            $fullname = $lastpage["fullname"] . "/" . $name;
+        }
+        $page = array(
+            "name" => $name,
+            "fullname" => $isroot ? $this->namespace . $fullname : $fullname,
+            "children" => $children,
+            "text" => $this->getPageHeadText($isroot)
+        );
+        array_push($this->pagestack, $page);
+        $this->currentpage = $page;
+        return $page;
+    }
+
+    # pop the last page off the stack, update the current page to be the previous
+    # one, and return the page that was popped
+    function endPage() {
+
+        $old = array_pop($this->pagestack);
+        $num = sizeof($this->pagestack);
+        $isroot = false;
+        if ($num > 0) {
+            $lastpage = $this->pagestack[sizeof($this->pagestack) - 1];
+            $this->currentpage = $lastpage;
+        }
+        else {
+            $isroot = true;
+            $this->currentpage = null;
+        }
+        $old["text"] .= $this->getPageFootText($isroot);
+        return $old;
+    }
+
+
+    # Home-brewed XML parser. I'm not familiar with any PHP XML libraries or
+    # utilities, and I don't know what features the MediaWiki server is going
+    # to have available anyway, so I'm just writing my own quickly.
+    # TODO: Reimplement 'NumberPages' option, to prepend a page number to each page.
+    function parseBookPage($text) {
         global $wgOut, $wgScriptPath;
-        $isroot = ($idx == 1);
-        $subpagenum = 0;
-        $pagetext = $this->getPageHeadText($isroot);
-        $createpage = $this->GetCreateFlag($isroot);
-        # Loop over all subpages inside [] brackets
-        for($i = $idx; $i < sizeof($lines); $i++) {
-            $line = rtrim($lines[$i]);
-            $this->_dbg("($path) Line $i: '$line'> ");
-            if($line == '[') {
-                $this->_dbgl("Ignored");
-                continue;
+        $matches = array();
+        $lines = explode("\n", $text);
+
+        $bookline = $lines[0];
+                $dbgtext = str_replace("<", '&lt;', $bookline);
+        $wgOut->addHTML("<pre>$dbgtext</pre>");
+        if (!preg_match("/<page name='([^']+)' children='(\d+)'>/", $bookline, $matches)) {
+
+            $wgOut->addHTML("XML ERROR");
+            return;
+        }
+        $this->bookname = $matches[1];
+        $this->_dbgl("Bookname: {$this->bookname}");
+
+        # dummy, just to get the loop started
+        $currentpage = array(
+            "name" => "",
+            "fullname" => "",
+            "children" => 0,
+            "text" => ""
+        );
+
+        for ($i = 0; $i < sizeof($lines); $i++) {
+            $line = $lines[$i];
+            $this->_dbgl("Line $i");
+            if (preg_match("/<page name='([^']+)' children='(\d+)'>/", $line, $matches)) {
+                $name = $matches[1];
+                $fullname = $currentpage["fullname"] . "/" . $name;
+                $this->_dbgl("Page: $name, $fullname");
+                $currentpage["text"] .= $this->getPageLinkWikiText($fullname, $name) . "\n";
+                $currentpage = $this->startPage($name, $matches[2]);
             }
-            if(strlen($line) == 0) {
-                $this->_dbgl("Ignored");
-                continue;
+            else if (preg_match("/<heading name='([^']+)' children='(\d+)'>/", $line, $matches)) {
+                $name = $matches[1];
+                $currentpage["text"] .= $this->getSectionHeadWikiText($name) . "\n\n";
             }
-            if($line == "]") {
-                $this->_dbgl("Breaking subpage loop");
-                $i++;
-                $idx = $i;
-                break;
+            else if($line == "</page>") {
+                $page = $this->endPage();
+                $this->addPageToList($page["name"], $page["fullname"], $page["text"], $page["children"]);
             }
-            else {
-                # We have a page name
-                $this->_dbgl("Recurse");
-                $subpagenum++;
-                $name = ($this->getOption('NumberPages') ? $subpagenum . ". " : "") . $line;
-                $createpage = TRUE;
-                $newpath = $path . "/" . $name;
-                $pagetext .= $this->getPageLinkWikiText($newpath, $name) . "\n";
-                $i = $this->parseBookPage($pagelist, $name, $newpath, $lines, $i + 1);
+            else if($line == "</heading>") {
             }
         }
-        $pagetext .= "\n";
-
-        # Loop over all headings inside {} brackets
-        for($i = $idx; $i < sizeof($lines); $i++) {
-            $line = rtrim($lines[$i]);
-            $this->_dbg("($path) Line $i: '$line'> ");
-            if($line == '{') {
-                $this->_dbgl("Ignored");
-                continue;
-            }
-            if(strlen($line) == 0) {
-                $this->_dbgl("Ignored");
-                continue;
-            }
-            if($line == '}') {
-                $this->_dbgl("Breaking heading loop");
-                $idx = $i;
-                break;
-            }
-            $this->_dbgl("Heading");
-            $createpage = TRUE;
-            $pagetext .= $this->getSectionHeadWikiText($line) . "\n\n";
-            # a heading can have pages under it, so enter another loop here to
-            # handle those pages.
-            for($i++; $i < sizeof($lines); $i++) {
-                $line2 = rtrim($lines[$i]);
-                $this->_dbg("Line " . $i . ": " . $line2 . "> ");
-                if($line2 == '[') {
-                    $this->_dbgl("Ignored");
-                    continue;
-                }
-                if(strlen($line2) == 0) {
-                    $this->_dbgl("Ignored");
-                    continue;
-                }
-                if($line2 == ']') {
-                    $this->_dbgl("Breaking heading-subpage loop");
-                    break;
-                }
-                $this->_dbgl("Heading-Subpage");
-                $newpath = $path . "/" . $line2;
-                $pagetext .= $this->getPageLinkWikiText($newpath, $line2) . "\n";
-                $j = $i + 1;
-                $i = $this->parseBookPage($pagelist, $line2, $newpath, $lines, $i + 1);
-            }
-        }
-
-        # Get the rest of the text, most of which is optional
-        $pagetext = $pagetext . $this->getPageFootText($isroot);
-
-        # We've parsed all direct subpages and all headings (and all subpages
-        # of those). We have all the information we need now to actually create
-        # this page. Page name is in $path. Page text is in $pagetext
-        # We only create the page if (1) we opt to create all pages, (2) the
-        # page contains subpages, (3) the page contains headings, or (4) it is
-        # the main page.
-        $this->addPageToList($pagelist, $page, $path, $pagetext, $createpage);
-        return $idx;
     }
 
     function createOnePage($path, $text) {
@@ -358,50 +358,48 @@ EOD;
     function verifyPublishOutline() {
         global $wgRequest;
         $text = $wgRequest->getText('VBDHiddenTextArea');
-        $lines = explode("\n", $text);
-        $this->bookname = $lines[0];
         $this->getOptions();
-        $pagelist = array();
-        $this->parseBookPage($pagelist, $lines[0], $this->namespace . $lines[0], $lines, 1);
+        $this->parseBookPage($text);
+
         # TODO: Instead of hard-coding in a list of pages that can be added,
         #       Allow the site to specify a list of standard pages, and supply
         #       a text template to be used on those pages.
         if ($this->getOption('UseHeader')) {
-            $this->addPageToList($pagelist, "Template:" . $this->bookname,
+            $this->addPageToList("Template:" . $this->bookname,
                 "Template:" . $this->bookname,
                 $this->getDefaultHeaderTemplateText($this->bookname),
                 true
             );
         }
         if ($this->getOption('UseFooter')) {
-            $this->addPageToList($pagelist, "Template:" . $this->bookname . "/Footer",
+            $this->addPageToList("Template:" . $this->bookname . "/Footer",
                 "Template:" . $this->bookname . "/Footer",
                 $this->getDefaultFooterTemplateText($this->bookname),
                 true
             );
         }
         if ($this->getOption('UseIntroduction')) {
-            $this->addPageToList($pagelist, "Introduction",
+            $this->addPageToList("Introduction",
                 $this->bookname . "/Introduction",
                 $this->getIntroductionPageText(),
                 true
             );
         }
         if ($this->getOption('UseResources')) {
-            $this->addPageToList($pagelist, "Resources",
+            $this->addPageToList("Resources",
                 $this->bookname . "/Resources",
                 $this->getResourcesPageText(),
                 true
             );
         }
         if ($this->getOption('UseLicensing')) {
-            $this->addPageToList($pagelist, "Licensing",
+            $this->addPageToList("Licensing",
                 $this->bookname . "/Licensing",
                 $this->getLicensingPageText(),
                 true
             );
         }
-        $this->showConfirmationPage($this->bookname, $pagelist);
+        $this->showConfirmationPage($this->bookname, $this->pagelist);
     }
 
     function showConfirmationPage($bookname, $pagelist) {

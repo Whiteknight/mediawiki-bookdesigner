@@ -144,8 +144,8 @@ PageHeading.prototype.closeButton = function () {
 // Generate the intermediate code representation for this heading, for use by
 // the server to actually build the page.
 PageHeading.prototype.makeSaveText = function () {
-    var text = "";
-    text += this.label + "\n[\n";
+    var children = this.subpages.length;
+    var text += "<heading name='" + this.label + "' children='" + children + "'>\n";
     // TODO: Uncomment all this when we actually have editable page text again
     //if(this.pagetext.length != 0) {
     //  var pagetext = this.pagetext;
@@ -159,7 +159,7 @@ PageHeading.prototype.makeSaveText = function () {
     //}
     for(var i = 0; i < this.subpages.length; i++)
         text += this.subpages[i].makeSaveText();
-    return text + "\n]\n";
+    return text + "</heading>\n";
 }
 
 // Make a heading node in the outline. This contains the heading's name and all
