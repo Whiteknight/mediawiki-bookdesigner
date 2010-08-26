@@ -642,7 +642,7 @@ EOD;
             </input>
             <br>
             <input type="checkbox" name="optNumberPages"
-                {$this->getOptionCheckbox('NumberPages')}>
+                {$this->getOptionCheckbox('NumberPages')} disabled>
                 {$this->GetMessage('optnumberpages')}
             </input>
             <br>

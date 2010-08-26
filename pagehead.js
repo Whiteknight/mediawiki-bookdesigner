@@ -12,6 +12,7 @@ function PageHeading(name) {
     this.box = null;
 }
 
+
 // Get a div element that will contain the text of the heading.
 // TODO: Not currently used
 //PageHeading.prototype.getTextNode = function () {
@@ -145,7 +146,7 @@ PageHeading.prototype.closeButton = function () {
 // the server to actually build the page.
 PageHeading.prototype.makeSaveText = function () {
     var children = this.subpages.length;
-    var text += "<heading name='" + this.label + "' children='" + children + "'>\n";
+    var text = "<heading name='" + this.label + "' children='" + children + "'>\n";
     // TODO: Uncomment all this when we actually have editable page text again
     //if(this.pagetext.length != 0) {
     //  var pagetext = this.pagetext;
