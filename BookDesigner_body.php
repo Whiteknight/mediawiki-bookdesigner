@@ -15,14 +15,15 @@ class BookDesigner extends SpecialPage {
         "UseFooter"       => false,
         "NumberPages"     => false,
         "UseNamespace"    => false,
-        "GenerateHeader"  => false,
-        "GenerateFooter"  => false,
         "UseIntroduction" => true,
         "UseResources"    => false,
-        "UseLicensing"    => true
+        "UseLicensing"    => true,
     );
     protected $namespace = "";
     protected $bookname  = "";
+    protected $pagelinktmpl = "* [[$1|$2]]";
+    protected $chapterlinktmpl = "* [[$1|$2]]";
+    protected $sectionheadtmpl = "== $1 ==";
 
     function getOption($name) {
         return $this->options[$name];
@@ -37,23 +38,38 @@ class BookDesigner extends SpecialPage {
     }
 
     function getHeaderTemplateTag() {
-        return $this->getOption('UseHeader') ? "{{" . $this->bookname . "}}\n\n" : "";
+        return $this->getOption('UseHeader') ? "{{" . $this->bookname . "}}" : "";
     }
 
     function getPageHeadText($isroot) {
-        $text = $this->getHeaderTemplateTag();
+        $text = $this->getHeaderTemplateTag() . "\n\n";
         if ($isroot && $this->getOption('UseIntroduction'))
-            $text .= "\n\n*[[" . $this->bookname . "/Introduction|Introduction]]\n";
+            $text .=
+                $this->GetPageLinkWikiText($this->bookname . "/Introduction", "Introduction")
+                . "\n";
         return $text;
     }
 
     function getPageFootText($isroot) {
         $text = "\n\n";
         if ($isroot && $this->getOption('UseResources'))
-            $text .= "*[[" . $this->bookname . "/Resources|Resources]]\n";
+            $text .= $this->getPageLinkWikiText($this->bookname . "/Resources", "Resources") . "\n";
         if ($isroot && $this->getOption('UseLicensing'))
-            $text .= "*[[" . $this->bookname . "/Licensing|Licensing]]\n";
+            $text .= $this->getPageLinkWikiText($this->bookname . "/Licensing", "Licensing") . "\n";
         return $text . $this->getFooterTemplateTag();
+    }
+
+    function getPageLinkWikiText($path, $name) {
+        return str_replace(array('$1', '$2'), array($path, $name), $this->pagelinktmpl);
+    }
+
+    function getChapterLinkWikiText($path, $name) {
+        # TODO: Once we support it, change this to use chapterlinktmpl
+        return str_replace(array('$1', '$2'), array($path, $name), $this->pagelinktmpl);
+    }
+
+    function getSectionHeadWikiText($name) {
+        return str_replace('$1', $name, $this->sectionheadtmpl);
     }
 
     # Quick and dirty debugging utilities. The value of $this->debug determines
@@ -143,7 +159,7 @@ class BookDesigner extends SpecialPage {
                 $name = ($this->getOption('NumberPages') ? $subpagenum . ". " : "") . $line;
                 $createpage = TRUE;
                 $newpath = $path . "/" . $name;
-                $pagetext .= "*[[" . $newpath . "|" . $name . "]]\n";
+                $pagetext .= $this->getPageLinkWikiText($newpath, $name) . "\n";
                 $i = $this->parseBookPage($pagelist, $name, $newpath, $lines, $i + 1);
             }
         }
@@ -168,7 +184,7 @@ class BookDesigner extends SpecialPage {
             }
             $this->_dbgl("Heading");
             $createpage = TRUE;
-            $pagetext .= "== " . $line . " ==\n\n";
+            $pagetext .= $this->getSectionHeadWikiText($line) . "\n\n";
             # a heading can have pages under it, so enter another loop here to
             # handle those pages.
             for($i++; $i < sizeof($lines); $i++) {
@@ -188,7 +204,7 @@ class BookDesigner extends SpecialPage {
                 }
                 $this->_dbgl("Heading-Subpage");
                 $newpath = $path . "/" . $line2;
-                $pagetext .= "*[[" . $newpath . "|" . $line2 . "]]\n";
+                $pagetext .= $this->getPageLinkWikiText($newpath, $line2) . "\n";
                 $j = $i + 1;
                 $i = $this->parseBookPage($pagelist, $line2, $newpath, $lines, $i + 1);
             }
@@ -236,12 +252,23 @@ EOD;
         global $wgRequest;
         $this->setOption("CreateLeaves", $wgRequest->getCheck("optCreateLeaves"));
         $this->setOption("UseHeader", $wgRequest->getCheck("optHeaderTemplate"));
+        $this->setOption("UseFooter", $wgRequest->getCheck("optFooterTemplate"));
         $this->setOption("NumberPages", $wgRequest->getCheck("optNumberPages"));
         $this->setOption("UseNamespace", $wgRequest->getCheck("optUseNamespace"));
+        $tmpl = $wgRequest->getText('optPageLinks');
+        if (isset($tmpl) && strlen($tmpl) > 0)
+            $this->pagelinktmpl = $tmpl;
+
+        $tmpl = $wgRequest->getText('optChapterLinks');
+        if (isset($tmpl) && strlen($tmpl) > 0)
+            $this->chapterlinktmpl = $tmpl;
+
+        $tmpl = $wgRequest->getText('optHeaderStyle');
+        if (isset($tmpl) && strlen($tmpl) > 0)
+            $this->sectionheadtmpl = $tmpl;
 
         $this->namespace = $this->getOption('UseNamespace')
             ? $wgRequest->getText("optNamespace") . ":" : "";
-        $this->setOption('GenerateHeader', $wgRequest->getCheck("optAutogenHeaderTemplate"));
         $this->setOption('UseIntroduction', $wgRequest->getCheck("optIntroductionPage"));
         $this->setOption('UseResources', $wgRequest->getCheck("optResourcesPage"));
         $this->setOption('UseLicensing', $wgRequest->getCheck("optLicensingPage"));
@@ -602,17 +629,25 @@ EOD;
                 {$this->getOptionCheckbox('UseHeader')}>
                 {$this->GetMessage('optheadertemplate')}
             </input>
-            <input type="checkbox" name="optAutogenHeaderTemplate"
-                {$this->getOptionCheckbox('GenerateHeader')}>
-                {$this->GetMessage('optautogenerate')}
-            </input>
             <br>
-            <input type="checkbox" name="optFooterTemplate" disabled>
+            <input type="checkbox" name="optFooterTemplate"
+                {$this->getOption('UseFooter')}>
                 {$this->GetMessage('optfootertemplate')}
             </input>
-            <input type="checkbox" name="optAutogenFooterTemplate" disabled>
-                {$this->GetMessage('optautogenerate')}
-            </input>
+            <br>
+            <b>
+                Formatting Options
+            </b>
+            <br>
+            Chapter Links:
+            <input type="text" name="optChapterLinks" value="{$this->chapterlinktmpl}" disabled/>
+            <br>
+            Page Links:
+            <input type="text" name="optPageLinks" value="{$this->pagelinktmpl}"/>
+            <br>
+            Headers:
+            <input type="text" name="optHeaderStyle" value="{$this->sectionheadtmpl}"/>
+            <br>
             <!-- TODO: Add a <select> item here with a list of auto-generate
                        template styles -->
         </div>
