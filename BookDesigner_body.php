@@ -234,8 +234,25 @@ class BookDesigner extends SpecialPage {
 
     # Returns an EXTREMELY basic text string for creating a header template.
     # TODO: Make this less bare-bones
-    # TODO: Make this user-configurable
-    function getTemplateText($bookname) {
+    # TODO: Add Forward/Back links
+    # TODO: Use a message to set the default, instead of hard-coding it here.
+    function getDefaultHeaderTemplateText($bookname) {
+        $text = <<<EOD
+
+<div style="border: 1px solid #AAAAAA; background-color: #F8F8F8; padding: 5px; margin: auto; width: 95%">
+<center>
+<big>'''[[$bookname]]'''</big>
+</center>
+</div>
+
+EOD;
+        return $text;
+    }
+
+    # TODO: Make this less bare-bones
+    # TODO: Add Forward/Back links
+    # TODO: Use a message to set the default, instead of hard-coding it here.
+    function getDefaultFooterTemplateText($bookname) {
         $text = <<<EOD
 
 <div style="border: 1px solid #AAAAAA; background-color: #F8F8F8; padding: 5px; margin: auto; width: 95%">
@@ -346,10 +363,20 @@ EOD;
         $this->getOptions();
         $pagelist = array();
         $this->parseBookPage($pagelist, $lines[0], $this->namespace . $lines[0], $lines, 1);
+        # TODO: Instead of hard-coding in a list of pages that can be added,
+        #       Allow the site to specify a list of standard pages, and supply
+        #       a text template to be used on those pages.
         if ($this->getOption('UseHeader')) {
             $this->addPageToList($pagelist, "Template:" . $this->bookname,
                 "Template:" . $this->bookname,
-                $this->getTemplateText($this->bookname),
+                $this->getDefaultHeaderTemplateText($this->bookname),
+                true
+            );
+        }
+        if ($this->getOption('UseFooter')) {
+            $this->addPageToList($pagelist, "Template:" . $this->bookname . "/Footer",
+                "Template:" . $this->bookname . "/Footer",
+                $this->getDefaultFooterTemplateText($this->bookname),
                 true
             );
         }
