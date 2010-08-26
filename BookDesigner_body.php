@@ -6,35 +6,33 @@ class BookDesigner extends SpecialPage {
     }
 
     # set this to true to enable debugging output.
-    protected $debug              = false;
+    protected $debug = false;
 
     # Internal values. Don't modify them, they get set at runtime
-    protected $bookname           = "";
-    protected $options            = array(
-        "CreateLeaves" => true,
-        "UseHeader" => true,
-        "UseFooter" => false,
-        "NumberPages" => false,
-        "UseNamespace" => false,
-        "GenerateHeader" => false,
-        "GenerateFooter" => false,
+    protected $options = array(
+        "CreateLeaves"    => true,
+        "UseHeader"       => true,
+        "UseFooter"       => false,
+        "NumberPages"     => false,
+        "UseNamespace"    => false,
+        "GenerateHeader"  => false,
+        "GenerateFooter"  => false,
         "UseIntroduction" => true,
-        "UseResources" => false,
-        "UseLicensing" => true
+        "UseResources"    => false,
+        "UseLicensing"    => true
     );
     protected $namespace = "";
+    protected $bookname  = "";
 
-    function GetOption($name) {
+    function getOption($name) {
         return $this->options[$name];
     }
 
-    function GetOptionCheckbox($name)
-    {
+    function getOptionCheckbox($name) {
         return $this->options[$name] ? "checked" : "";
     }
 
-    function SetOption($name, $value)
-    {
+    function setOption($name, $value) {
         $this->options[$name] = $value;
     }
 
@@ -42,16 +40,14 @@ class BookDesigner extends SpecialPage {
         return $this->getOption('UseHeader') ? "{{" . $this->bookname . "}}\n\n" : "";
     }
 
-    function getPageHeadText($isroot)
-    {
+    function getPageHeadText($isroot) {
         $text = $this->getHeaderTemplateTag();
         if ($isroot && $this->getOption('UseIntroduction'))
             $text .= "\n\n*[[" . $this->bookname . "/Introduction|Introduction]]\n";
         return $text;
     }
 
-    function getPageFootText($isroot)
-    {
+    function getPageFootText($isroot) {
         $text = "\n\n";
         if ($isroot && $this->getOption('UseResources'))
             $text .= "*[[" . $this->bookname . "/Resources|Resources]]\n";
@@ -82,13 +78,12 @@ class BookDesigner extends SpecialPage {
         return $create;
     }
 
-    function addPageToList(&$pagelist, $pagename, $fullname, $pagetext, $create)
-    {
+    function addPageToList(&$pagelist, $pagename, $fullname, $pagetext, $create) {
         $pagelist[] = array(
-            "name" => $pagename,
+            "name"     => $pagename,
             "fullname" => $fullname,
-            "text" => $pagetext,
-            "create" => $create
+            "text"     => $pagetext,
+            "create"   => $create
         );
         $this->_dbgl("Adding page $fullname");
     }
@@ -122,7 +117,7 @@ class BookDesigner extends SpecialPage {
         $isroot = ($idx == 1);
         $subpagenum = 0;
         $pagetext = $this->getPageHeadText($isroot);
-        $createleaf = $this->GetCreateFlag($isroot);
+        $createpage = $this->GetCreateFlag($isroot);
         # Loop over all subpages inside [] brackets
         for($i = $idx; $i < sizeof($lines); $i++) {
             $line = rtrim($lines[$i]);
@@ -208,12 +203,11 @@ class BookDesigner extends SpecialPage {
         # We only create the page if (1) we opt to create all pages, (2) the
         # page contains subpages, (3) the page contains headings, or (4) it is
         # the main page.
-        $this->addPageToList($pagelist, $page, $path, $pagetext, $createleaf);
+        $this->addPageToList($pagelist, $page, $path, $pagetext, $createpage);
         return $idx;
     }
 
-    function createOnePage($path, $text)
-    {
+    function createOnePage($path, $text) {
         global $wgOut, $wgScriptPath;
         $title = Title::newFromText($path);
         $article = new Article($title);
@@ -258,7 +252,7 @@ EOD;
     }
 
     # Main function, this is where execution starts
-    function execute( $par ) {
+    function execute($par) {
         # TODO: Validate that we are logged in. Also, create an option to
         #       require certain permissions (either admin, or a custom
         #       permission or something)
@@ -319,22 +313,12 @@ EOD;
 
     function verifyPublishOutline() {
         global $wgRequest;
-        # TODO: Parse the outline, and generate an output page for verification
-        #       The output page should show a list of all pages. Each page
-        #       should have:
-        #       1) A checkbox, to determine if we really publish it
-        #       2) A textbox, showing the text of the page open to modification
-
-        # TODO: Parse the list of pages/headings into some kind of
-        #       PHP-friendly array or structure first, instead of parsing
-        #       it and creating it all in one swoop
-        # TODO: Show the user a list of pages to create, with checkboxes to
-        #       confirm creation of all these pages.
         $text = $wgRequest->getText('VBDHiddenTextArea');
         $lines = explode("\n", $text);
         $this->bookname = $lines[0];
         $this->getOptions();
         $pagelist = array();
+        $this->parseBookPage($pagelist, $lines[0], $this->namespace . $lines[0], $lines, 1);
         if ($this->getOption('UseHeader')) {
             $this->addPageToList($pagelist, "Template:" . $this->bookname,
                 "Template:" . $this->bookname,
@@ -349,7 +333,6 @@ EOD;
                 true
             );
         }
-        $this->parseBookPage($pagelist, $lines[0], $this->namespace . $lines[0], $lines, 1);
         if ($this->getOption('UseResources')) {
             $this->addPageToList($pagelist, "Resources",
                 $this->bookname . "/Resources",
@@ -368,6 +351,8 @@ EOD;
     }
 
     function showConfirmationPage($bookname, $pagelist) {
+        # TODO: detect if any pages already exist. Link to them if they do, and
+        #       bring the issue to the attention of the user
         global $wgOut, $wgScriptPath;
         $jspath  = "$wgScriptPath/extensions/BookDesigner";
         $wgOut->addScriptFile($jspath . "/designer.js");
@@ -394,7 +379,6 @@ EOT;
                 $page["fullname"], $page["text"], $page["create"]);
             $i++;
         }
-        $wgOut->addHTML($this->getOptionsWidget());
         $text = <<<EOT
     <input type="submit" value="Publish" />
     <a href="$wgScriptPath/index.php?title=Special:BookDesigner">
@@ -556,7 +540,6 @@ EOD;
     }
 
     function getOptionsWidget() {
-        # TODO: Toggle the options based on the value of fields in the class
         $text = <<<EOD
 <div id="VBDOptionsSpan">
         <h2>
