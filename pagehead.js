@@ -52,24 +52,25 @@ PageHeading.prototype.makeSubpagesLink = function () {
         var edit = vbd.makeElement('textarea', {rows:10, cols:50});
         edit.value = text;
         self.formspan.innerHTML = "";
-        self.formspan.appendChild(document.createTextNode(
-            'Enter the names of all subpages, one per line'));
-        self.formspan.appendChild(edit);
-        self.formspan.appendChild(vbd.makeButton('', 'Save', function() {
-            self.subpages.length = 0;
-            var pages = edit.value.split("\n");
-            for(var i = 0; i < pages.length; i++) {
-                if(pages[i].match(/^\s*$/))
-                    continue;
-                var stat = vbd.FindPageNameInArray(old, pages[i]);
-                if(stat != -1)
-                    self.addSubpage(old[stat]);
-                else
-                    self.addSubpage(new BookPage(vbd.forceFirstCaps(pages[i])));
-            }
-            self.formspan.innerHTML = "";
-            vbd.visual();
-        }));
+        vbd.appendChildren(self.formspan, [
+            'Enter the names of all subpages, one per line',
+            edit,
+            vbd.makeButton('', 'Save', function() {
+                self.subpages.length = 0;
+                var pages = edit.value.split("\n");
+                for(var i = 0; i < pages.length; i++) {
+                    if(pages[i].match(/^\s*$/))
+                        continue;
+                    var stat = vbd.FindPageNameInArray(old, pages[i]);
+                    if(stat != -1)
+                        self.addSubpage(old[stat]);
+                    else
+                        self.addSubpage(new BookPage(vbd.forceFirstCaps(pages[i])));
+                }
+                self.formspan.innerHTML = "";
+                vbd.visual();
+            })
+        ]);
         self.closeButton();
         edit.focus();
     }
@@ -149,9 +150,13 @@ PageHeading.prototype.getTitleNode = function () {
 // Create a close button for the node
 PageHeading.prototype.closeButton = function () {
     var self = this;
-    this.formspan.appendChild(vbd.makeButton('', 'Close', function() {
-        self.formspan.innerHTML = "";
-    }));
+    this.formspan.appendChild(
+        vbd.makeButton('', 'Close',
+            function() {
+                self.formspan.innerHTML = "";
+            }
+        )
+    );
 }
 
 // Generate the intermediate code representation for this heading, for use by

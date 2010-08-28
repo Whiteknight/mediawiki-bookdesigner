@@ -382,5 +382,3 @@ BookPage.prototype.makeNode = function() {
     return this.box;
 }
 
-
-
