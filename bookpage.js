@@ -140,6 +140,22 @@ BookPage.prototype.makeSubpagesAddLink = function () {
     return link;
 }
 
+BookPage.prototype.makeDeleteLink = function() {
+    var link = vbd.makeElement('a', null, ["delete"]);
+    var self = this;
+    link.onclick = function() {
+        if(confirm("delete page '" + self.pagename + "'? " +
+            "You will lose all contents. This cannot be undone.")) {
+            if(self.parent2 == null)
+                self.parent.removeSubpage(self);
+            else
+                self.parent2.removeSubpage(self);
+            vbd.visual();
+        }
+    }
+    return link;
+}
+
 // Create a link to add a new heading
 BookPage.prototype.makeHeadingsAddLink = function () {
     var link = vbd.makeElement('a', null, [" [ + ]"]);
@@ -218,17 +234,6 @@ BookPage.prototype.getTitleNode = function () {
             self.pagename = pagename.replace("\n", "");
             vbd.visual();
         })]);
-        if(!self.isRoot()) {
-            self.formspan.appendChild(vbd.makeButton('', 'Delete', function () {
-                if(confirm("delete page '" + self.pagename + "'?")) {
-                    if(self.parent2 == null)
-                        self.parent.removeSubpage(self);
-                    else
-                        self.parent2.removeSubpage(self);
-                    vbd.visual();
-                }
-            }));
-        }
         self.closeButton();
     }
     if(this.subpages.length != 0 || this.headings.length != 0)
@@ -338,12 +343,18 @@ BookPage.prototype.makeRootMenu = function() {
 BookPage.prototype.makeNode = function() {
     this.box = vbd.makeElement('div', null, [
         this.getTitleNode(),
-        this.makeRootMenu(),
-        vbd.makeElement('small', null, [
-            this.makeHeadingsLink(), this.makeHeadingsAddLink(), " - ",
-            this.makeSubpagesLink(), this.makeSubpagesAddLink()
-        ])
+        this.makeRootMenu()
     ]);
+    var smalllinks = vbd.makeElement('small', null, [
+        this.makeHeadingsLink(),
+        this.makeHeadingsAddLink(),
+        " - ",
+        this.makeSubpagesLink(),
+        this.makeSubpagesAddLink()
+    ])
+    if (!this.isRoot())
+        vbd.appendChildren(smalllinks, [" - ", this.makeDeleteLink()])
+    this.box.appendChild(smalllinks);
     this.box.style.position = "relative";
     this.box.appendChild(vbd.makeElement('br'));
     //this.box.appendChild(this.getTextNode());

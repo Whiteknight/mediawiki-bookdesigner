@@ -41,7 +41,7 @@ function PageHeading(name) {
 //}
 
 // Make a link to modify the list of subpages
-PageHeading.prototype.makeSubpagesLinks = function () {
+PageHeading.prototype.makeSubpagesLink = function () {
     var link = vbd.makeElement('a', null, ['Subpages']);
     var self = this;
     link.onclick = function() {
@@ -73,13 +73,31 @@ PageHeading.prototype.makeSubpagesLinks = function () {
         self.closeButton();
         edit.focus();
     }
-    var add = vbd.makeElement('a', null, [' [ + ]']);
-    add.onclick = function() {
+    return link;
+}
+
+PageHeading.prototype.makeAddSubpagesLink = function () {
+    var link = vbd.makeElement('a', null, [' [ + ]']);
+    var self = this;
+    link.onclick = function() {
         self.addSubpage(new BookPage(vbd.defpagename + " " + vbd.newpagecnt));
         vbd.newpagecnt++;
         vbd.visual();
     }
-    return [link, add];
+    return link;
+}
+
+PageHeading.prototype.makeDeleteLink = function() {
+    var link = vbd.makeElement('a', null, ['delete']);
+    var self = this;
+    link.onclick = function () {
+        if(confirm("delete heading '" + self.label + "'? " +
+            "You will lose all contents. This cannot be undone.")) {
+            self.parent.removeHeading(self);
+            vbd.visual();
+        }
+    }
+    return link;
 }
 
 // Get a node represending the page heading. This is a large bit of text
@@ -108,12 +126,6 @@ PageHeading.prototype.getTitleNode = function () {
             self.label = pagename.replace("\n", "");
             self.formspan.innerHTML = "";
             vbd.visual();
-        }));
-        self.formspan.appendChild(vbd.makeButton('', 'Delete', function () {
-            if(confirm("delete heading '" + self.label + "'?")) {
-                self.parent.removeHeading(self);
-                vbd.visual();
-            }
         }));
         self.closeButton();
         edit.focus();
@@ -167,8 +179,14 @@ PageHeading.prototype.makeSaveText = function () {
 // the objects that go with it.
 PageHeading.prototype.makeNode = function () {
     this.box = vbd.makeElement('div', null, [
-        this.getTitleNode(), " - ",
-        vbd.makeElement('small', null, this.makeSubpagesLinks()),
+        this.getTitleNode(),
+        " - ",
+        vbd.makeElement('small', null, [
+            this.makeSubpagesLink(),
+            this.makeAddSubpagesLink(),
+            " - ",
+            this.makeDeleteLink()
+        ]),
         vbd.makeElement('br'),
         // TODO: Uncomment this when we have editable page text
         //this.getTextNode(),
