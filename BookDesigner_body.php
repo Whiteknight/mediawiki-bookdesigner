@@ -1,7 +1,7 @@
 <?php
 class BookDesigner extends SpecialPage {
     function __construct() {
-        parent::__construct( 'BookDesigner' );
+        parent::__construct('BookDesigner', 'autoconfirmed');
         wfLoadExtensionMessages('BookDesigner');
     }
 
@@ -19,11 +19,23 @@ class BookDesigner extends SpecialPage {
         "UseResources"    => false,
         "UseLicensing"    => true,
     );
+    protected $validuser = false;
     protected $namespace = "";
     protected $bookname  = "";
     protected $pagelinktmpl = "* [[$1|$2]]";
     protected $chapterlinktmpl = "* [[$1|$2]]";
     protected $sectionheadtmpl = "== $1 ==";
+
+    function validateUser()
+    {
+        global $wgUser;
+        if (!$this->userCanExecute($wgUser)) {
+            $this->displayRestrictionError();
+            return false;
+        }
+        $this->validuser = $wgUser->isAllowed('buildbook');
+        return $this->validuser;
+    }
 
     function getOption($name) {
         return $this->options[$name];
@@ -303,6 +315,12 @@ EOD;
         global $wgRequest, $wgOut;
         $this->setHeaders();
         $wgOut->setPageTitle("Book Designer");
+
+        if (!$this->validateUser()) {
+            $this->showAuthenticationError();
+            return;
+        }
+
         $this->loadJSAndCSS();
 
         $mode = "outline";
@@ -337,6 +355,20 @@ EOD;
                 $this->unknownModeError('show', $mode, $title);
             }
         }
+    }
+
+    function showauthenticationError() {
+        global $wgOut;
+        $text = <<<EOT
+<div>
+    <p>
+        <span style='color: darkred; font-weight: bold'>Error:</span>
+        You must be logged in and have 'buildbook' permission to created
+        books using this tool.
+    </p>
+</div>
+EOT;
+        $wgOut->addHTML($text);
     }
 
     function unknownModeError($type, $mode, $title) {

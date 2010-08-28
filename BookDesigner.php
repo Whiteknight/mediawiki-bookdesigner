@@ -26,3 +26,4 @@ $wgExtensionMessagesFiles['BookDesigner'] = $dir . 'BookDesigner.i18n.php';
 $wgExtensionAliasesFiles['BookDesigner']  = $dir . 'BookDesigner.alias.php';
 $wgSpecialPages['BookDesigner']           = 'BookDesigner';
 
+$wgGroupPermissions['sysop']['buildbook'] = true;
