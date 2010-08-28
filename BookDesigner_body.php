@@ -525,6 +525,11 @@ EOT;
         $this->addCSSFile("designer.css");
     }
 
+    function getVersion() {
+        global $wg_VBDExtensionVersion;
+        return $wg_VBDExtensionVersion;
+    }
+
     function addCSSFile($file) {
         global $wgScriptPath, $wgOut;
         $csspath = "$wgScriptPath/extensions/BookDesigner";
@@ -567,6 +572,7 @@ EOT;
         </div>
     </div>
     {$this->getOptionsWidget()}
+    <input type="hidden" id="VBDVersion" value="{$this->getVersion()}"/>
     <div id="VBDOutlineSpan">
         {$this->GetMessage('jserror')}
     </div>

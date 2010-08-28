@@ -1,8 +1,6 @@
 // Visual Book designer (vbd) object, global singleton
 var vbd = {
-    // Version numbers
-    version:  3.75,
-
+    version: "unknown",
     // Default name of all new books:
     pageTree: null,
     defName: 'New Book',
@@ -27,6 +25,7 @@ var vbd = {
 
 // Set VBD to load on document load
 addOnloadHook(function() {
+    vbd.version = document.getElementById("VBDVersion").value;
     vbd.pageTree = new BookPage(vbd.defName);
     vbd.visual();
 });

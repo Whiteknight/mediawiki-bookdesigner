@@ -8,13 +8,15 @@ EOT;
     exit( 1 );
 }
 
+$wg_VBDExtensionVersion = '4.0 beta';
+
 $wgExtensionCredits['specialpage'][] = array(
     'name'           => 'BookDesigner',
     'author'         => 'Andrew Whitworth',
     'url'            => 'http://github.com/Whiteknight/mediawiki-bookdesigner',
     'description'    => 'Design and create books using a graphical outlining tool',
     'descriptionmsg' => 'bookdesigner-desc',
-    'version'        => '0.0.1',
+    'version'        => $wg_VBDExtensionVersion
 );
 
 $dir = dirname(__FILE__) . '/';
