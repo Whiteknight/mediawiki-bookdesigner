@@ -56,7 +56,7 @@ vbd.makeOptionsCheckbox = function (field) {
 }
 
 // Set the text of an element. If the given element is a Node, set the innerHTML
-// directly. If it is a string, treat is as an ID and look up the element in
+// directly. If it is a string, treat it as an ID and look up the element in
 // the document.
 vbd.spanText = function(spanid, txt) {
     var item;

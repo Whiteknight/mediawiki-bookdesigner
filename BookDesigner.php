@@ -22,6 +22,9 @@ $wgExtensionCredits['specialpage'][] = array(
 $dir = dirname(__FILE__) . '/';
 
 $wgAutoloadClasses['BookDesigner']        = $dir . 'BookDesigner_body.php';
+$wgAutoloadClasses['BookDesignerOptions'] = $dir . 'BookDesigner.options.php';
+$wgAutoloadClasses['BookDesignerParser']  = $dir . 'BookDesigner.parser.php';
+$wgAutoloadClasses['BookDesignerPage']    = $dir . 'BookDesigner.page.php';
 $wgExtensionMessagesFiles['BookDesigner'] = $dir . 'BookDesigner.i18n.php';
 $wgExtensionAliasesFiles['BookDesigner']  = $dir . 'BookDesigner.alias.php';
 $wgSpecialPages['BookDesigner']           = 'BookDesigner';

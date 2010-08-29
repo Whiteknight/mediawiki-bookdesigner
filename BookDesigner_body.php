@@ -3,28 +3,29 @@ class BookDesigner extends SpecialPage {
     function __construct() {
         parent::__construct('BookDesigner', 'autoconfirmed');
         wfLoadExtensionMessages('BookDesigner');
+        $this->options = new BookDesignerOptions();
     }
 
     # set this to true to enable debugging output.
     protected $debug = false;
 
     # Internal values. Don't modify them, they get set at runtime
-    protected $options = array(
-        "CreateLeaves"    => true,
-        "UseHeader"       => true,
-        "UseFooter"       => false,
-        "NumberPages"     => false,
-        "UseNamespace"    => false,
-        "UseIntroduction" => true,
-        "UseResources"    => false,
-        "UseLicensing"    => true,
-    );
+    protected $options;
     protected $validuser = false;
     protected $namespace = "";
     protected $bookname  = "";
-    protected $pagelinktmpl = "* [[$1|$2]]";
-    protected $chapterlinktmpl = "* [[$1|$2]]";
-    protected $sectionheadtmpl = "== $1 ==";
+
+    function bookName($set = null) {
+        if ($set != null)
+            $this->bookname = $set;
+        return $this->bookname;
+    }
+
+    function bookNamespace($set = null) {
+        if ($set != null)
+            $this->namespace = $set . ":";
+        return $this->namespace;
+    }
 
     function validateUser()
     {
@@ -35,53 +36,6 @@ class BookDesigner extends SpecialPage {
         }
         $this->validuser = $wgUser->isAllowed('buildbook');
         return $this->validuser;
-    }
-
-    function getOption($name) {
-        return $this->options[$name];
-    }
-
-    function getOptionCheckbox($name) {
-        return $this->options[$name] ? "checked" : "";
-    }
-
-    function setOption($name, $value) {
-        $this->options[$name] = $value;
-    }
-
-    function getHeaderTemplateTag() {
-        return $this->getOption('UseHeader') ? "{{" . $this->bookname . "}}" : "";
-    }
-
-    function getPageHeadText($isroot) {
-        $text = $this->getHeaderTemplateTag() . "\n\n";
-        if ($isroot && $this->getOption('UseIntroduction'))
-            $text .=
-                $this->GetPageLinkWikiText($this->bookname . "/Introduction", "Introduction")
-                . "\n";
-        return $text;
-    }
-
-    function getPageFootText($isroot) {
-        $text = "\n\n";
-        if ($isroot && $this->getOption('UseResources'))
-            $text .= $this->getPageLinkWikiText($this->bookname . "/Resources", "Resources") . "\n";
-        if ($isroot && $this->getOption('UseLicensing'))
-            $text .= $this->getPageLinkWikiText($this->bookname . "/Licensing", "Licensing") . "\n";
-        return $text . $this->getFooterTemplateTag();
-    }
-
-    function getPageLinkWikiText($path, $name) {
-        return str_replace(array('$1', '$2'), array($path, $name), $this->pagelinktmpl);
-    }
-
-    function getChapterLinkWikiText($path, $name) {
-        # TODO: Once we support it, change this to use chapterlinktmpl
-        return str_replace(array('$1', '$2'), array($path, $name), $this->pagelinktmpl);
-    }
-
-    function getSectionHeadWikiText($name) {
-        return str_replace('$1', $name, $this->sectionheadtmpl);
     }
 
     # Quick and dirty debugging utilities. The value of $this->debug determines
@@ -96,143 +50,9 @@ class BookDesigner extends SpecialPage {
         $this->_dbg($word . "<br/>");
     }
 
-    function getFooterTemplateTag() {
-        # TODO: Add an option to specify a footer tag
-        return "{{" . $this->bookname . "/Footer}}";
-    }
-
-    function GetCreateFlag($isroot) {
-        $create = $this->getOption('CreateLeaves') || $isroot;
+    function getCreateFlag($isroot) {
+        $create = $this->options->CreateLeaves() || $isroot;
         return $create;
-    }
-
-    function addPageToList($pagename, $fullname, $pagetext, $numchildren) {
-        $create = $this->getOption('CreateLeaves');
-        if (!$create)
-            $create = ($numchildren > 0);
-        $this->pagelist[] = array(
-            "name"     => $pagename,
-            "fullname" => $fullname,
-            "text"     => $pagetext,
-            "create"   => $create
-        );
-        $this->_dbgl("Adding page $fullname");
-    }
-
-    function getIntroductionPageText() {
-        return $this->GetHeaderTemplateTag() .
-            "\n\n" .
-             $this->GetFooterTemplateTag();
-    }
-
-    function getResourcesPageText() {
-        return $this->GetHeaderTemplateTag() .
-            "\n\n" .
-             $this->GetFooterTemplateTag();
-    }
-
-    function getLicensingPageText() {
-        return $this->GetHeaderTemplateTag() .
-            "\n\n" .
-             $this->GetFooterTemplateTag();
-    }
-
-    protected $pagestack = array();
-    protected $currentpage = null;
-    protected $pagelist = array();
-
-    # push a new page onto the stack, and set it as the current. Return the
-    # object with information about the page
-    function startPage($name, $children) {
-        $num = sizeof($this->pagestack);
-        $fullname = $name;
-        $isroot = true;
-        $this->_dbgl("Starting page $name, $isroot");
-        if ($num > 0) {
-            $isroot = false;
-            $lastpage = $this->pagestack[sizeof($this->pagestack) - 1];
-            $fullname = $lastpage["fullname"] . "/" . $name;
-        }
-        $page = array(
-            "name" => $name,
-            "fullname" => $isroot ? $this->namespace . $fullname : $fullname,
-            "children" => $children,
-            "text" => $this->getPageHeadText($isroot)
-        );
-        array_push($this->pagestack, $page);
-        $this->currentpage = $page;
-        return $page;
-    }
-
-    # pop the last page off the stack, update the current page to be the previous
-    # one, and return the page that was popped
-    function endPage() {
-
-        $old = array_pop($this->pagestack);
-        $num = sizeof($this->pagestack);
-        $isroot = false;
-        if ($num > 0) {
-            $lastpage = $this->pagestack[sizeof($this->pagestack) - 1];
-            $this->currentpage = $lastpage;
-        }
-        else {
-            $isroot = true;
-            $this->currentpage = null;
-        }
-        $old["text"] .= $this->getPageFootText($isroot);
-        return $old;
-    }
-
-
-    # Home-brewed XML parser. I'm not familiar with any PHP XML libraries or
-    # utilities, and I don't know what features the MediaWiki server is going
-    # to have available anyway, so I'm just writing my own quickly.
-    # TODO: Reimplement 'NumberPages' option, to prepend a page number to each page.
-    function parseBookPage($text) {
-        global $wgOut, $wgScriptPath;
-        $matches = array();
-        $lines = explode("\n", $text);
-
-        $bookline = $lines[0];
-                $dbgtext = str_replace("<", '&lt;', $bookline);
-        $wgOut->addHTML("<pre>$dbgtext</pre>");
-        if (!preg_match("/<page name='([^']+)' children='(\d+)'>/", $bookline, $matches)) {
-
-            $wgOut->addHTML("XML ERROR");
-            return;
-        }
-        $this->bookname = $matches[1];
-        $this->_dbgl("Bookname: {$this->bookname}");
-
-        # dummy, just to get the loop started
-        $currentpage = array(
-            "name" => "",
-            "fullname" => "",
-            "children" => 0,
-            "text" => ""
-        );
-
-        for ($i = 0; $i < sizeof($lines); $i++) {
-            $line = $lines[$i];
-            $this->_dbgl("Line $i");
-            if (preg_match("/<page name='([^']+)' children='(\d+)'>/", $line, $matches)) {
-                $name = $matches[1];
-                $fullname = $currentpage["fullname"] . "/" . $name;
-                $this->_dbgl("Page: $name, $fullname");
-                $currentpage["text"] .= $this->getPageLinkWikiText($fullname, $name) . "\n";
-                $currentpage = $this->startPage($name, $matches[2]);
-            }
-            else if (preg_match("/<heading name='([^']+)' children='(\d+)'>/", $line, $matches)) {
-                $name = $matches[1];
-                $currentpage["text"] .= $this->getSectionHeadWikiText($name) . "\n\n";
-            }
-            else if($line == "</page>") {
-                $page = $this->endPage();
-                $this->addPageToList($page["name"], $page["fullname"], $page["text"], $page["children"]);
-            }
-            else if($line == "</heading>") {
-            }
-        }
     }
 
     function createOnePage($path, $text) {
@@ -277,32 +97,6 @@ EOD;
         return $text;
     }
 
-    function getOptions() {
-        global $wgRequest;
-        $this->setOption("CreateLeaves", $wgRequest->getCheck("optCreateLeaves"));
-        $this->setOption("UseHeader", $wgRequest->getCheck("optHeaderTemplate"));
-        $this->setOption("UseFooter", $wgRequest->getCheck("optFooterTemplate"));
-        $this->setOption("NumberPages", $wgRequest->getCheck("optNumberPages"));
-        $this->setOption("UseNamespace", $wgRequest->getCheck("optUseNamespace"));
-        $tmpl = $wgRequest->getText('optPageLinks');
-        if (isset($tmpl) && strlen($tmpl) > 0)
-            $this->pagelinktmpl = $tmpl;
-
-        $tmpl = $wgRequest->getText('optChapterLinks');
-        if (isset($tmpl) && strlen($tmpl) > 0)
-            $this->chapterlinktmpl = $tmpl;
-
-        $tmpl = $wgRequest->getText('optHeaderStyle');
-        if (isset($tmpl) && strlen($tmpl) > 0)
-            $this->sectionheadtmpl = $tmpl;
-
-        $this->namespace = $this->getOption('UseNamespace')
-            ? $wgRequest->getText("optNamespace") . ":" : "";
-        $this->setOption('UseIntroduction', $wgRequest->getCheck("optIntroductionPage"));
-        $this->setOption('UseResources', $wgRequest->getCheck("optResourcesPage"));
-        $this->setOption('UseLicensing', $wgRequest->getCheck("optLicensingPage"));
-    }
-
     function GetMessage($msgname) {
         return wfMsg('bookdesigner-' . $msgname);
     }
@@ -322,6 +116,7 @@ EOD;
         }
 
         $this->loadJSAndCSS();
+        $this->options->getOptions();
 
         $mode = "outline";
         $title = null;
@@ -350,11 +145,13 @@ EOD;
             #       $mode == 'preload' attempts to load an existing outline
             if (!isset($mode) || $mode == "" || $mode == "outline" || $mode == "preload") {
                 $this->displayMainOutline($mode, $title);
+                return;
             }
             else {
                 $this->unknownModeError('show', $mode, $title);
             }
-        }
+
+}
     }
 
     function showauthenticationError() {
@@ -390,48 +187,28 @@ EOD;
     function verifyPublishOutline() {
         global $wgRequest;
         $text = $wgRequest->getText('VBDHiddenTextArea');
-        $this->getOptions();
-        $this->parseBookPage($text);
-
+        $parser = new BookDesignerParser($this, $this->options);
+        $parser->parse($text);
         # TODO: Instead of hard-coding in a list of pages that can be added,
         #       Allow the site to specify a list of standard pages, and supply
         #       a text template to be used on those pages.
-        if ($this->getOption('UseHeader')) {
-            $this->addPageToList("Template:" . $this->bookname,
-                "Template:" . $this->bookname,
-                $this->getDefaultHeaderTemplateText($this->bookname),
-                true
-            );
-        }
-        if ($this->getOption('UseFooter')) {
-            $this->addPageToList("Template:" . $this->bookname . "/Footer",
-                "Template:" . $this->bookname . "/Footer",
-                $this->getDefaultFooterTemplateText($this->bookname),
-                true
-            );
-        }
-        if ($this->getOption('UseIntroduction')) {
-            $this->addPageToList("Introduction",
-                $this->bookname . "/Introduction",
-                $this->getIntroductionPageText(),
-                true
-            );
-        }
-        if ($this->getOption('UseResources')) {
-            $this->addPageToList("Resources",
-                $this->bookname . "/Resources",
-                $this->getResourcesPageText(),
-                true
-            );
-        }
-        if ($this->getOption('UseLicensing')) {
-            $this->addPageToList("Licensing",
-                $this->bookname . "/Licensing",
-                $this->getLicensingPageText(),
-                true
-            );
-        }
-        $this->showConfirmationPage($this->bookname, $this->pagelist);
+        #if ($this->options->useHeader()) {
+        #    $this->addPageToList("Template:" . $this->bookname,
+        #        "Template:" . $this->bookname,
+        #        $this->getDefaultHeaderTemplateText($this->bookname),
+        #        true
+        #    );
+        #}
+        #if ($this->options->useFooter()) {
+        #    $this->addPageToList("Template:" . $this->bookname . "/Footer",
+        #        "Template:" . $this->bookname . "/Footer",
+        #        $this->getDefaultFooterTemplateText($this->bookname),
+        #        true
+        #    );
+        #}
+
+        $pagelist = $parser->getPages();
+        $this->showConfirmationPage($this->bookname, $pagelist);
     }
 
     function showConfirmationPage($bookname, $pagelist) {
@@ -459,8 +236,7 @@ EOT;
         $wgOut->addHTML($text);
         $numpages = count($pagelist);
         foreach ($pagelist as &$page) {
-            $this->showPageSinglePageConfirmation($i, $page["name"],
-                $page["fullname"], $page["text"], $page["create"]);
+            $this->showPageSinglePageConfirmation($i, $page);
             $i++;
         }
         $text = <<<EOT
@@ -475,8 +251,12 @@ EOT;
         $wgOut->addHTML($text);
     }
 
-    function showPageSinglePageConfirmation($idx, $name, $path, $text, $create) {
+    function showPageSinglePageConfirmation($idx, $page) {
         global $wgOut;
+        $path = $page->fullname();
+        $create = $this->options->createLeaves ? true : $page->children() > 0;
+        $text = $page->text();
+
         $checked = $create ? "checked" : "";
         $text = <<<EOT
         <div class="VBDConfirmPageDiv">
@@ -643,31 +423,15 @@ EOD;
         </h2>
         <div id="VBDOptionsInternal" style="display: none;">
             <b>{$this->GetMessage('optsbook')}</b><br>
-            <input type="checkbox" name="optUseNamespace"
-                {$this->getOptionCheckbox('UseNamespace')}>
+            <input type="checkbox" name="optUseNamespace" disabled>
                 {$this->GetMessage('optusenamespace')}:
             </input>
             <br>
             <input type="text" style="margin-left: 6em;" name="optNamespace"
-                value="{$this->namespace}">
+                value="{$this->namespace}" disabled>
             <br>
             <input type="checkbox" name="optUseUserSpace" disabled>
                 {$this->GetMessage('optuseuserspace')}
-            </input>
-            <br>
-            <input type="checkbox" name="optIntroductionPage"
-                {$this->getOptionCheckbox('UseIntroduction')}>
-                {$this->GetMessage('optintroductionpage')}
-            </input>
-            <br>
-            <input type="checkbox" name="optResourcesPage"
-                {$this->getOptionCheckbox('UseResources')}>
-                {$this->GetMessage('optresourcespage')}
-            </input>
-            <br>
-            <input type="checkbox" name="optLicensingPage"
-                {$this->getOptionCheckbox('UseLicensing')}>
-                {$this->GetMessage('optlicensingpage')}
             </input>
             <br>
             <b>
@@ -675,12 +439,11 @@ EOD;
             </b>
             <br>
             <input type="checkbox" name="optCreateLeaves"
-                {$this->getOptionCheckbox('CreateLeaves')}>
+                {$this->options->createLeaves(true)}>
                 {$this->GetMessage('optcreateleaf')}
             </input>
             <br>
-            <input type="checkbox" name="optNumberPages"
-                {$this->getOptionCheckbox('NumberPages')} disabled>
+            <input type="checkbox" name="optNumberPages" disabled>
                 {$this->GetMessage('optnumberpages')}
             </input>
             <br>
@@ -689,12 +452,12 @@ EOD;
             </b>
             <br>
             <input type="checkbox" name="optHeaderTemplate"
-                {$this->getOptionCheckbox('UseHeader')}>
+                {$this->options->useHeader(true)}>
                 {$this->GetMessage('optheadertemplate')}
             </input>
             <br>
             <input type="checkbox" name="optFooterTemplate"
-                {$this->getOption('UseFooter')}>
+                {$this->options->useFooter(true)}>
                 {$this->GetMessage('optfootertemplate')}
             </input>
             <br>
@@ -703,13 +466,16 @@ EOD;
             </b>
             <br>
             Chapter Links:
-            <input type="text" name="optChapterLinks" value="{$this->chapterlinktmpl}" disabled/>
+            <input type="text" name="optChapterLinks"
+                value="{$this->options->chapterLinkTemplate()}" disabled/>
             <br>
             Page Links:
-            <input type="text" name="optPageLinks" value="{$this->pagelinktmpl}"/>
+            <input type="text" name="optPageLinks"
+                value="{$this->options->pageLinkTemplate()}"/>
             <br>
             Headers:
-            <input type="text" name="optHeaderStyle" value="{$this->sectionheadtmpl}"/>
+            <input type="text" name="optHeaderStyle"
+                value="{$this->options->sectionHeaderTemplate()}"/>
             <br>
             <!-- TODO: Add a <select> item here with a list of auto-generate
                        template styles -->
