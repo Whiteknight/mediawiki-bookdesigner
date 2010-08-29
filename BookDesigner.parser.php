@@ -11,6 +11,20 @@ class BookDesignerParser {
     protected $currentpage = null;
     protected $pagelist = array();
 
+    # set this to true to enable debugging output.
+    protected $debug = true;
+    # Quick and dirty debugging utilities. The value of $this->debug determines
+    # whether we print something. These functions can probably disappear soon
+    # since the parseBookPage parser routine has been mostly tested.
+    function _dbg($word) {
+        global $wgOut;
+        if($this->debug)
+            $wgOut->addHTML($word);
+    }
+    function _dbgl($word) {
+        $this->_dbg($word . "<br/>");
+    }
+
     function getPages() {
         return $this->pagelist;
     }
@@ -61,11 +75,13 @@ class BookDesignerParser {
         $isroot = true;
         if ($num > 0)
             $isroot = false;
+        $this->_dbgl("Parser creating page $name ($fullname)");
         $page = new BookDesignerPage($name, $fullname);
         $page->children($children);
         $page->text($this->getPageHeadText($isroot));
         array_push($this->pagestack, $page);
         $this->currentpage = $page;
+        $this->_dbgl("start: current page is {$this->currentpage->name()}, {$this->currentpage->fullname()}");
         return $page;
     }
 
@@ -78,12 +94,14 @@ class BookDesignerParser {
         if ($num > 0) {
             $lastpage = $this->pagestack[sizeof($this->pagestack) - 1];
             $this->currentpage = $lastpage;
+            $this->_dbgl("end: current page is {$this->currentpage->name()}, {$this->currentpage->fullname()}");
         }
         else {
             $isroot = true;
             $this->currentpage = null;
         }
         $old->addText($this->getPageFootText($isroot));
+
         return $old;
     }
 
@@ -105,21 +123,22 @@ class BookDesignerParser {
         $this->designer->bookName($matches[1]);
 
         # dummy, just to get the loop started
-        $currentpage = new BookDesignerPage("", "");
+        $this->currentpage = new BookDesignerPage("", "");
 
         for ($i = 0; $i < sizeof($lines); $i++) {
             $line = $lines[$i];
             if (preg_match("/<page name='([^']+)' children='(\d+)'>/", $line, $matches)) {
                 $name = $matches[1];
-                $fullname = $currentpage->fullname() . "/" . $name;
                 if ($i == 0)
-                    $fullname = $this->designer->bookNamespace() . "/" .
-                $currentpage->addText($this->getPageLinkWikiText($fullname, $name) . "\n");
-                $currentpage = $this->startPage($name, $fullname, $matches[2]);
+                    $fullname = $this->designer->bookNamespace() . $name;
+                else
+                    $fullname = $this->currentpage->fullname() . "/" . $name;
+                $this->currentpage->addText($this->getPageLinkWikiText($fullname, $name) . "\n");
+                $this->startPage($name, $fullname, $matches[2]);
             }
             else if (preg_match("/<heading name='([^']+)' children='(\d+)'>/", $line, $matches)) {
                 $name = $matches[1];
-                $currentpage->addText($this->getSectionHeadWikiText($name) . "\n\n");
+                $this->currentpage->addText($this->getSectionHeadWikiText($name) . "\n\n");
             }
             else if($line == "</page>") {
                 $page = $this->endPage();

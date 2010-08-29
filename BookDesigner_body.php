@@ -6,9 +6,6 @@ class BookDesigner extends SpecialPage {
         $this->options = new BookDesignerOptions();
     }
 
-    # set this to true to enable debugging output.
-    protected $debug = false;
-
     # Internal values. Don't modify them, they get set at runtime
     protected $options;
     protected $validuser = false;
@@ -38,17 +35,7 @@ class BookDesigner extends SpecialPage {
         return $this->validuser;
     }
 
-    # Quick and dirty debugging utilities. The value of $this->debug determines
-    # whether we print something. These functions can probably disappear soon
-    # since the parseBookPage parser routine has been mostly tested.
-    function _dbg($word) {
-        global $wgOut;
-        if($this->debug)
-            $wgOut->addHTML($word);
-    }
-    function _dbgl($word) {
-        $this->_dbg($word . "<br/>");
-    }
+
 
     function getCreateFlag($isroot) {
         $create = $this->options->CreateLeaves() || $isroot;
