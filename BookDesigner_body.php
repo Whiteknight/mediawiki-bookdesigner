@@ -118,11 +118,9 @@ EOD;
                 $this->verifyPublishOutline();
             }
             else if ($mode == 'publish') {
-                $this->_dbgl("publish");
                 $this->reallyPublishOutline();
             }
             else {
-                $this->_dbgl("post error");
                 $this->unknownModeError('post', $mode, $title);
             }
         }
@@ -241,7 +239,7 @@ EOT;
     function showPageSinglePageConfirmation($idx, $page) {
         global $wgOut;
         $path = $page->fullname();
-        $create = $this->options->createLeaves ? true : $page->children() > 0;
+        $create = $this->options->createLeaves() ? true : $page->children() > 0;
         $text = $page->text();
 
         $checked = $create ? "checked" : "";

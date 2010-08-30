@@ -12,7 +12,7 @@ class BookDesignerParser {
     protected $pagelist = array();
 
     # set this to true to enable debugging output.
-    protected $debug = true;
+    protected $debug = false;
     # Quick and dirty debugging utilities. The value of $this->debug determines
     # whether we print something. These functions can probably disappear soon
     # since the parseBookPage parser routine has been mostly tested.
