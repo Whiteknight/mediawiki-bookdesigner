@@ -1,17 +1,19 @@
 <?php
 class BookDesignerPage {
-    function __construct($name, $full) {
-        $this->name = $name;
-        $this->fullname = $full;
-        $this->_dbgl("Creating page $name ($fullname)");
-    }
-
     protected $debug = false;
 
     protected $name;
     protected $fullname;
     protected $children = "";
     protected $text = "";
+
+    function __construct($name, $full) {
+        $this->name = $name;
+        $this->fullname = $full;
+        $this->_dbgl("Creating page $name ($full)");
+    }
+
+
 
     function _dbg($word) {
         global $wgOut;
@@ -50,6 +52,6 @@ class BookDesignerPage {
 
     function addText($txt) {
         $this->text .= $txt;
-        $this->_dbgl("Adding text to {$this->name} to '$set'");
+        $this->_dbgl("Adding text to {$this->name} to '$txt'");
     }
 }

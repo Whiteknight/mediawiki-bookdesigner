@@ -103,7 +103,6 @@ EOD;
         }
 
         $this->loadJSAndCSS();
-        $this->options->getOptions();
 
         $mode = "outline";
         $title = null;
@@ -115,14 +114,13 @@ EOD;
         }
         if($wgRequest->wasPosted()) {
             if ($mode == 'verify') {
+                $this->options->getOptions();
                 $this->verifyPublishOutline();
             }
             else if ($mode == 'publish') {
-                $this->_dbgl("publish");
                 $this->reallyPublishOutline();
             }
             else {
-                $this->_dbgl("post error");
                 $this->unknownModeError('post', $mode, $title);
             }
         }
@@ -138,7 +136,7 @@ EOD;
                 $this->unknownModeError('show', $mode, $title);
             }
 
-}
+        }
     }
 
     function showauthenticationError() {
@@ -241,7 +239,7 @@ EOT;
     function showPageSinglePageConfirmation($idx, $page) {
         global $wgOut;
         $path = $page->fullname();
-        $create = $this->options->createLeaves ? true : $page->children() > 0;
+        $create = $this->options->createLeaves() ? true : $page->children() > 0;
         $text = $page->text();
 
         $checked = $create ? "checked" : "";
@@ -370,7 +368,7 @@ EOT;
             {$this->GetMessage('qsi')}
         </div>
     </div>
-    {$this->getOptionsWidget()}
+    {$this->options->getOptionsWidget()}
     <input type="hidden" id="VBDVersion" value="{$this->getVersion()}"/>
     <div id="VBDOutlineSpan">
         {$this->GetMessage('jserror')}
@@ -396,80 +394,6 @@ EOD;
         $wgOut->addHTML($text);
     }
 
-    function getOptionsWidget() {
-        $text = <<<EOD
-<div id="VBDOptionsSpan">
-        <h2>
-            <span style="float: right; font-size: 67%;">
-                [<a id="VBDOptionsToggle"
-                    onclick="vbd.ToggleGUIWidget('VBDOptionsInternal', 'VBDOptionsToggle');"><!--
-                    -->{$this->GetMessage('show')}<!--
-                --></a>]
-            </span>
-            {$this->GetMessage('options')}
-        </h2>
-        <div id="VBDOptionsInternal" style="display: none;">
-            <b>{$this->GetMessage('optsbook')}</b><br>
-            <input type="checkbox" name="optUseNamespace" disabled>
-                {$this->GetMessage('optusenamespace')}:
-            </input>
-            <br>
-            <input type="text" style="margin-left: 6em;" name="optNamespace"
-                value="{$this->namespace}" disabled>
-            <br>
-            <input type="checkbox" name="optUseUserSpace" disabled>
-                {$this->GetMessage('optuseuserspace')}
-            </input>
-            <br>
-            <b>
-                {$this->GetMessage('optspage')}
-            </b>
-            <br>
-            <input type="checkbox" name="optCreateLeaves"
-                {$this->options->createLeaves(true)}>
-                {$this->GetMessage('optcreateleaf')}
-            </input>
-            <br>
-            <input type="checkbox" name="optNumberPages" disabled>
-                {$this->GetMessage('optnumberpages')}
-            </input>
-            <br>
-            <b>
-                {$this->GetMessage('optstemplate')}
-            </b>
-            <br>
-            <input type="checkbox" name="optHeaderTemplate"
-                {$this->options->useHeader(true)}>
-                {$this->GetMessage('optheadertemplate')}
-            </input>
-            <br>
-            <input type="checkbox" name="optFooterTemplate"
-                {$this->options->useFooter(true)}>
-                {$this->GetMessage('optfootertemplate')}
-            </input>
-            <br>
-            <b>
-                Formatting Options
-            </b>
-            <br>
-            Chapter Links:
-            <input type="text" name="optChapterLinks"
-                value="{$this->options->chapterLinkTemplate()}" disabled/>
-            <br>
-            Page Links:
-            <input type="text" name="optPageLinks"
-                value="{$this->options->pageLinkTemplate()}"/>
-            <br>
-            Headers:
-            <input type="text" name="optHeaderStyle"
-                value="{$this->options->sectionHeaderTemplate()}"/>
-            <br>
-            <!-- TODO: Add a <select> item here with a list of auto-generate
-                       template styles -->
-        </div>
-    </div>
-EOD;
-        return $text;
-    }
+
 }
 
