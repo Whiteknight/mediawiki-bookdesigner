@@ -68,6 +68,31 @@ class BookDesignerParser {
         $this->pagelist[] = $page;
     }
 
+    function getHeaderTemplateText() {
+        $header = wfMsg('bookdesigner-defaultheader', $this->designer->bookName());
+        return $header;
+    }
+
+    function getFooterTemplateText() {
+        $header = wfMsg('bookdesigner-defaultfooter', $this->designer->bookName());
+        return $header;
+    }
+
+    function maybeAddTemplates() {
+        if ($this->options->useHeader()) {
+            $head = new BookDesignerPage("Template:" . $this->designer->bookName(),
+                "Template:" . $this->designer->bookName());
+            $head->text($this->getHeaderTemplateText());
+            $this->addPageToList($head);
+        }
+        if ($this->options->useFooter()) {
+            $name = "Template:" . $this->designer->bookName() . "/Footer";
+            $foot = new BookDesignerPage($name, $name);
+            $foot->text($this->getFooterTemplateText());
+            $this->addPageToList($foot);
+        }
+    }
+
     # push a new page onto the stack, and set it as the current. Return the
     # object with information about the page
     function startPage($name, $fullname, $children) {
@@ -147,5 +172,6 @@ class BookDesignerParser {
             else if($line == "</heading>") {
             }
         }
+        $this->maybeAddTemplates();
     }
 }

@@ -35,8 +35,6 @@ class BookDesigner extends SpecialPage {
         return $this->validuser;
     }
 
-
-
     function getCreateFlag($isroot) {
         $create = $this->options->CreateLeaves() || $isroot;
         return $create;
@@ -49,39 +47,6 @@ class BookDesigner extends SpecialPage {
         $article->doEdit($text, "Creating page for book '{$this->bookname}'. " .
             "Automated page creation by BookDesigner");
         return $title;
-    }
-
-    # Returns an EXTREMELY basic text string for creating a header template.
-    # TODO: Make this less bare-bones
-    # TODO: Add Forward/Back links
-    # TODO: Use a message to set the default, instead of hard-coding it here.
-    function getDefaultHeaderTemplateText($bookname) {
-        $text = <<<EOD
-
-<div style="border: 1px solid #AAAAAA; background-color: #F8F8F8; padding: 5px; margin: auto; width: 95%">
-<center>
-<big>'''[[$bookname]]'''</big>
-</center>
-</div>
-
-EOD;
-        return $text;
-    }
-
-    # TODO: Make this less bare-bones
-    # TODO: Add Forward/Back links
-    # TODO: Use a message to set the default, instead of hard-coding it here.
-    function getDefaultFooterTemplateText($bookname) {
-        $text = <<<EOD
-
-<div style="border: 1px solid #AAAAAA; background-color: #F8F8F8; padding: 5px; margin: auto; width: 95%">
-<center>
-<big>'''[[$bookname]]'''</big>
-</center>
-</div>
-
-EOD;
-        return $text;
     }
 
     function GetMessage($msgname) {

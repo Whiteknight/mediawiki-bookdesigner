@@ -41,11 +41,28 @@ EOQSI
     'bookdesigner-optfootertemplate'   => 'Include Footer Template',
     'bookdesigner-optautogenerate'     => 'Autogenerate',
     'bookdesigner-publishbutton'       => 'Publish Book!',
+    'bookdesigner-defaultheader'       => <<<EOHEADER
+<div style="border: 1px solid #AAAAAA; background-color: #F8F8F8; padding: 5px; margin: auto; width: 95%">
+<center>
+<big>'''[[$1]]'''</big>
+</center>
+</div>
+EOHEADER
+    ,
+
+    'bookdesigner-defaultfooter'       => <<<EOFOOTER
+<div style="border: 1px solid #AAAAAA; background-color: #F8F8F8; padding: 5px; margin: auto; width: 95%">
+<center>
+<big>'''[[$bookname]]'''</big>
+</center>
+</div>
+EOFOOTER
+    ,
 
     'bookdesigner-jserror' => <<<EOJSERROR
 JavaScript is not working, or designer.js could not be found.
 Make sure to enable JavaScript in your browser, and contact your wiki site administrator.
 EOJSERROR
-    ,
+
 );
 
