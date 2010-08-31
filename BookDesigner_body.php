@@ -35,11 +35,6 @@ class BookDesigner extends SpecialPage {
         return $this->validuser;
     }
 
-    function getCreateFlag($isroot) {
-        $create = $this->options->CreateLeaves() || $isroot;
-        return $create;
-    }
-
     function createOnePage($path, $text) {
         global $wgOut, $wgScriptPath;
         $title = Title::newFromText($path);
@@ -204,7 +199,7 @@ EOT;
     function showPageSinglePageConfirmation($idx, $page) {
         global $wgOut;
         $path = $page->fullname();
-        $create = $this->options->createLeaves() ? true : $page->children() > 0;
+        $create = $page->shouldCreate($this->options->createLeaves());
         $text = $page->text();
 
         $checked = $create ? "checked" : "";

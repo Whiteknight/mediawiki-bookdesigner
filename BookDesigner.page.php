@@ -6,13 +6,13 @@ class BookDesignerPage {
     protected $fullname;
     protected $children = "";
     protected $text = "";
+    protected $forcecreate = false;
 
     function __construct($name, $full) {
         $this->name = $name;
         $this->fullname = $full;
         $this->_dbgl("Creating page $name ($full)");
     }
-
 
 
     function _dbg($word) {
@@ -40,6 +40,16 @@ class BookDesignerPage {
         if ($set != null)
             $this->children = $set;
         return $this->children;
+    }
+
+    function forceCreate($force) {
+        $this->forcecreate = $force;
+    }
+
+    function shouldCreate($force) {
+        if ($force || $this->forcecreate)
+            return true;
+        return ($this->children > 0);
     }
 
     function text($set = null) {

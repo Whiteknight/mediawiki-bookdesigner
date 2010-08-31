@@ -83,12 +83,14 @@ class BookDesignerParser {
             $head = new BookDesignerPage("Template:" . $this->designer->bookName(),
                 "Template:" . $this->designer->bookName());
             $head->text($this->getHeaderTemplateText());
+            $head->forceCreate(true);
             $this->addPageToList($head);
         }
         if ($this->options->useFooter()) {
             $name = "Template:" . $this->designer->bookName() . "/Footer";
             $foot = new BookDesignerPage($name, $name);
             $foot->text($this->getFooterTemplateText());
+            $foot->forceCreate(true);
             $this->addPageToList($foot);
         }
     }
