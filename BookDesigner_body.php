@@ -134,23 +134,6 @@ EOD;
         $text = $wgRequest->getText('VBDHiddenTextArea');
         $parser = new BookDesignerParser($this, $this->options);
         $parser->parse($text);
-        # TODO: Instead of hard-coding in a list of pages that can be added,
-        #       Allow the site to specify a list of standard pages, and supply
-        #       a text template to be used on those pages.
-        #if ($this->options->useHeader()) {
-        #    $this->addPageToList("Template:" . $this->bookname,
-        #        "Template:" . $this->bookname,
-        #        $this->getDefaultHeaderTemplateText($this->bookname),
-        #        true
-        #    );
-        #}
-        #if ($this->options->useFooter()) {
-        #    $this->addPageToList("Template:" . $this->bookname . "/Footer",
-        #        "Template:" . $this->bookname . "/Footer",
-        #        $this->getDefaultFooterTemplateText($this->bookname),
-        #        true
-        #    );
-        #}
 
         $pagelist = $parser->getPages();
         $this->showConfirmationPage($this->bookname, $pagelist);
@@ -353,7 +336,5 @@ EOT;
 EOD;
         $wgOut->addHTML($text);
     }
-
-
 }
 

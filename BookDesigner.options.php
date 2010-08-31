@@ -7,22 +7,7 @@ class BookDesignerOptions {
     protected $chapterlinktmpl = "* [[$1|$2]]";
     protected $sectionheadtmpl = "== $1 ==";
 
-    # set this to true to enable debugging output.
-    protected $debug = true;
-    # Quick and dirty debugging utilities. The value of $this->debug determines
-    # whether we print something. These functions can probably disappear soon
-    # since the parseBookPage parser routine has been mostly tested.
-    function _dbg($word) {
-        global $wgOut;
-        if($this->debug)
-            $wgOut->addHTML($word);
-    }
-    function _dbgl($word) {
-        $this->_dbg($word . "<br/>");
-    }
-
     function getOptions() {
-        $this->_dbgl("Getting options from postback");
         global $wgRequest;
         $this->createleaves = $wgRequest->getCheck("optCreateLeaves");
         $this->useheader = $wgRequest->getCheck("optHeaderTemplate");
@@ -77,9 +62,6 @@ class BookDesignerOptions {
         $leaves = $this->checkbox($this->createleaves);
         $head = $this->checkbox($this->useheader);
         $foot = $this->checkbox($this->usefooter);
-        $this->_dbgl("Leaves: $leaves, {$this->createleaves}");
-        $this->_dbgl("Header: $head, {$this->useheader}");
-        $this->_dbgl("Footer: $foot, {$this->usefooter}");
         $text = <<<EOD
 <div id="VBDOptionsSpan">
         <h2>

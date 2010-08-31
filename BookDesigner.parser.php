@@ -11,20 +11,6 @@ class BookDesignerParser {
     protected $currentpage = null;
     protected $pagelist = array();
 
-    # set this to true to enable debugging output.
-    protected $debug = false;
-    # Quick and dirty debugging utilities. The value of $this->debug determines
-    # whether we print something. These functions can probably disappear soon
-    # since the parseBookPage parser routine has been mostly tested.
-    function _dbg($word) {
-        global $wgOut;
-        if($this->debug)
-            $wgOut->addHTML($word);
-    }
-    function _dbgl($word) {
-        $this->_dbg($word . "<br/>");
-    }
-
     function getPages() {
         return $this->pagelist;
     }
@@ -102,13 +88,11 @@ class BookDesignerParser {
         $isroot = true;
         if ($num > 0)
             $isroot = false;
-        $this->_dbgl("Parser creating page $name ($fullname)");
         $page = new BookDesignerPage($name, $fullname);
         $page->children($children);
         $page->text($this->getPageHeadText($isroot));
         array_push($this->pagestack, $page);
         $this->currentpage = $page;
-        $this->_dbgl("start: current page is {$this->currentpage->name()}, {$this->currentpage->fullname()}");
         return $page;
     }
 
@@ -121,7 +105,6 @@ class BookDesignerParser {
         if ($num > 0) {
             $lastpage = $this->pagestack[sizeof($this->pagestack) - 1];
             $this->currentpage = $lastpage;
-            $this->_dbgl("end: current page is {$this->currentpage->name()}, {$this->currentpage->fullname()}");
         }
         else {
             $isroot = true;
