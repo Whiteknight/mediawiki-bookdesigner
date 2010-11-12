@@ -38,8 +38,11 @@ EOQSI
     'bookdesigner-optcreateleaf'       => 'Create Leaf Pages',
     'bookdesigner-optnumberpages'      => 'Number Pages',
     'bookdesigner-optstemplate'        => 'Template Options',
+    'bookdesigner-optsformatting'      => 'Formatting Options',
     'bookdesigner-optheadertemplate'   => 'Include Header Template',
     'bookdesigner-optfootertemplate'   => 'Include Footer Template',
+    'bookdesigner-optpagelinks'        => 'Page Links:',
+    'bookdesigner-optheaderstyle'      => 'Headers:',
     'bookdesigner-optautogenerate'     => 'Autogenerate',
     'bookdesigner-publishbutton'       => 'Publish Book!',
     'bookdesigner-defaultheader'       => <<<EOHEADER

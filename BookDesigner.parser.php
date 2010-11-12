@@ -8,7 +8,6 @@ class BookDesignerParser {
     protected $designer;
     protected $options;
     protected $pagestack = array();
-    protected $currentpage = null;
     protected $pagelist = array();
     protected $titlepage = null;
 
@@ -32,11 +31,6 @@ class BookDesignerParser {
 
     function getPageLinkWikiText($path, $name) {
         $template = $this->options->PageLinkTemplate();
-        return str_replace(array('$1', '$2'), array($path, $name), $template);
-    }
-
-    function getChapterLinkWikiText($path, $name) {
-        $template = $this->options->ChapterLinkTemplate();
         return str_replace(array('$1', '$2'), array($path, $name), $template);
     }
 
@@ -80,7 +74,7 @@ class BookDesignerParser {
             $this->addPageToList($head);
         }
         if ($this->options->useFooter()) {
-            $name = "Template:" . $this->designer->bookName() . "/Footer";
+            $name = "Template:" . $this->titlepage->name() . "/Footer";
             $foot = new BookDesignerPage($name, $name);
             $foot->text($this->getFooterTemplateText());
             $foot->forceCreate(true);

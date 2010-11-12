@@ -4,7 +4,6 @@ class BookDesignerOptions {
     protected $useheader = true;
     protected $usefooter = false;
     protected $pagelinktmpl = "* [[$1|$2]]";
-    protected $chapterlinktmpl = "* [[$1|$2]]";
     protected $sectionheadtmpl = "== $1 ==";
     protected $booknamespace = null;
 
@@ -27,10 +26,6 @@ class BookDesignerOptions {
         if (isset($tmpl) && strlen($tmpl) > 0)
             $this->pagelinktmpl = $tmpl;
 
-        $tmpl = $wgRequest->getText('optChapterLinks');
-        if (isset($tmpl) && strlen($tmpl) > 0)
-            $this->chapterlinktmpl = $tmpl;
-
         $tmpl = $wgRequest->getText('optHeaderStyle');
         if (isset($tmpl) && strlen($tmpl) > 0)
             $this->sectionheadtmpl = $tmpl;
@@ -42,10 +37,6 @@ class BookDesignerOptions {
 
     function pageLinkTemplate() {
         return $this->pagelinktmpl;
-    }
-
-    function chapterLinkTemplate() {
-        return $this->chapterlinktmpl;
     }
 
     function sectionHeaderTemplate() {
@@ -129,18 +120,14 @@ class BookDesignerOptions {
             </input>
             <br>
             <b>
-                Formatting Options
+                {$this->getMessage('optsformatting')}
             </b>
             <br>
-            Chapter Links:
-            <input type="text" name="optChapterLinks"
-                value="{$this->chapterlinktmpl}" disabled/>
-            <br>
-            Page Links:
+            {$this->getMessage('optpagelinks')}
             <input type="text" name="optPageLinks"
                 value="{$this->pagelinktmpl}"/>
             <br>
-            Headers:
+            {$this->getMessage('optheaderstyle')}
             <input type="text" name="optHeaderStyle"
                 value="{$this->sectionheadtmpl}"/>
             <br>
