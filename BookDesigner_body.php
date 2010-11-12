@@ -307,17 +307,6 @@ EOT;
          somewhere in userspace, and maybe a button somewhere to "load" an
          existing outline. -->
     <input type="submit" value="{$this->GetMessage('publishbutton')}" /><br>
-    <!-- TODO: This is a temporary addition to aid in debugging. It shows the
-         intermediate code before it's transmitted to the server. This way if
-         there is some kind of a server error, we can save a copy of that
-         intermediate code to a safe place so when we are making a huge outline
-         we don't lose all that work. No i18n for debug stuff.
-    -->
-    <small>
-        <a href="#" onclick="document.getElementById('VBDHiddenTextArea').style.display = 'block';">
-            Show Intermediate Code
-        </a>
-    </small>
 </form>
 
 EOD;
