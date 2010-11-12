@@ -10,18 +10,23 @@ class BookDesignerParser {
     protected $pagestack = array();
     protected $currentpage = null;
     protected $pagelist = array();
+    protected $titlepage = null;
 
     function getPages() {
         return $this->pagelist;
     }
 
+    function titlePage() {
+        return $this->titlepage;
+    }
+
     function getHeaderTemplateTag() {
-        $bookname = $this->designer->bookName();
+        $bookname = $this->titlepage->name();
         return $this->options->UseHeader() ? "{{" . $bookname . "}}" : "";
     }
 
     function getFooterTemplateTag() {
-        $bookname = $this->designer->bookName();
+        $bookname = $this->titlepage->name();
         return $this->options->UseFooter() ? "{{" . $bookname . "/Footer}}" : "";
     }
 
@@ -55,19 +60,21 @@ class BookDesignerParser {
     }
 
     function getHeaderTemplateText() {
-        $header = wfMsg('bookdesigner-defaultheader', $this->designer->bookName());
+        $header = wfMsg('bookdesigner-defaultheader', $this->titlepage->name(),
+            $this->titlepage->fullname());
         return $header;
     }
 
     function getFooterTemplateText() {
-        $header = wfMsg('bookdesigner-defaultfooter', $this->designer->bookName());
+        $header = wfMsg('bookdesigner-defaultfooter', $this->titlepage->name(),
+            $this->titlepage->fullname());
         return $header;
     }
 
     function maybeAddTemplates() {
         if ($this->options->useHeader()) {
-            $head = new BookDesignerPage("Template:" . $this->designer->bookName(),
-                "Template:" . $this->designer->bookName());
+            $head = new BookDesignerPage("Template:" . $this->titlepage->name(),
+                "Template:" . $this->titlepage->name());
             $head->text($this->getHeaderTemplateText());
             $head->forceCreate(true);
             $this->addPageToList($head);
@@ -89,6 +96,8 @@ class BookDesignerParser {
         if ($num > 0)
             $isroot = false;
         $page = new BookDesignerPage($name, $fullname);
+        if ($this->titlepage == null)
+            $this->titlepage = $page;
         $page->children($children);
         $page->text($this->getPageHeadText($isroot));
         array_push($this->pagestack, $page);
@@ -130,7 +139,6 @@ class BookDesignerParser {
             $wgOut->addHTML("XML ERROR");
             return;
         }
-        $this->designer->bookName($matches[1]);
 
         # dummy, just to get the loop started
         $this->currentpage = new BookDesignerPage("", "");
@@ -140,7 +148,7 @@ class BookDesignerParser {
             if (preg_match("/<page name='([^']+)' children='(\d+)'>/", $line, $matches)) {
                 $name = $matches[1];
                 if ($i == 0)
-                    $fullname = $this->designer->bookNamespace() . $name;
+                    $fullname = $this->options->bookNamespace() . $name;
                 else
                     $fullname = $this->currentpage->fullname() . "/" . $name;
                 $this->currentpage->addText($this->getPageLinkWikiText($fullname, $name) . "\n");

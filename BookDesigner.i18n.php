@@ -28,6 +28,7 @@ EOQSI
     'bookdesigner-hide'                => 'Hide',
     'bookdesigner-options'             => 'Options',
     'bookdesigner-optsbook'            => 'Book Options',
+    'bookdesigner-optdefaultnamespace' => 'Main Namespace',
     'bookdesigner-optusenamespace'     => 'Specify Namespace',
     'bookdesigner-optuseuserspace'     => 'Create In User Namespace',
     'bookdesigner-optintroductionpage' => 'Create Introduction Page',
@@ -44,7 +45,7 @@ EOQSI
     'bookdesigner-defaultheader'       => <<<EOHEADER
 <div style="border: 1px solid #AAAAAA; background-color: #F8F8F8; padding: 5px; margin: auto; width: 95%">
 <center>
-<big>'''[[$1]]'''</big>
+<big>'''[[$2|$1]]'''</big>
 </center>
 </div>
 EOHEADER
@@ -53,7 +54,7 @@ EOHEADER
     'bookdesigner-defaultfooter'       => <<<EOFOOTER
 <div style="border: 1px solid #AAAAAA; background-color: #F8F8F8; padding: 5px; margin: auto; width: 95%">
 <center>
-<big>'''[[$bookname]]'''</big>
+<big>'''[[$2|$1]]'''</big>
 </center>
 </div>
 EOFOOTER

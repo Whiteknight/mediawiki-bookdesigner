@@ -9,20 +9,7 @@ class BookDesigner extends SpecialPage {
     # Internal values. Don't modify them, they get set at runtime
     protected $options;
     protected $validuser = false;
-    protected $namespace = "";
-    protected $bookname  = "";
-
-    function bookName($set = null) {
-        if ($set != null)
-            $this->bookname = $set;
-        return $this->bookname;
-    }
-
-    function bookNamespace($set = null) {
-        if ($set != null)
-            $this->namespace = $set . ":";
-        return $this->namespace;
-    }
+    protected $titlepage = null;
 
     function validateUser()
     {
@@ -35,11 +22,11 @@ class BookDesigner extends SpecialPage {
         return $this->validuser;
     }
 
-    function createOnePage($path, $text) {
+    function createOnePage($bookname, $path, $text) {
         global $wgOut, $wgScriptPath;
         $title = Title::newFromText($path);
         $article = new Article($title);
-        $article->doEdit($text, "Creating page for book '{$this->bookname}'. " .
+        $article->doEdit($text, "Creating page for book '{$bookname}'. " .
             "Automated page creation by BookDesigner");
         return $title;
     }
@@ -134,9 +121,9 @@ EOD;
         $text = $wgRequest->getText('VBDHiddenTextArea');
         $parser = new BookDesignerParser($this, $this->options);
         $parser->parse($text);
-
+        $this->titlepage = $parser->titlePage();
         $pagelist = $parser->getPages();
-        $this->showConfirmationPage($this->bookname, $pagelist);
+        $this->showConfirmationPage($this->titlepage->name(), $pagelist);
     }
 
     function showConfirmationPage($bookname, $pagelist) {
@@ -173,7 +160,7 @@ EOT;
         Cancel
     </a>
     <input type="hidden" name="VBDTotalPageCount" value="{$numpages}" />
-    <input type="hidden" name="VBDBookName" value="{$this->bookname}" />
+    <input type="hidden" name="VBDBookName" value="{$this->titlepage->name()}" />
 </form>
 EOT;
         $wgOut->addHTML($text);
@@ -210,7 +197,7 @@ EOT;
     function reallyPublishOutline() {
         global $wgRequest, $wgOut;;
         $numpages = $wgRequest->getInt('VBDTotalPageCount');
-        $this->bookname = $wgRequest->getText('VBDBookName');
+        $bookname = $wgRequest->getText('VBDBookName');
         $wgOut->addHTML("<ul>");
         for ($i = 0; $i < $numpages; $i++) {
             $path = $wgRequest->getText("path_{$i}");
@@ -219,7 +206,7 @@ EOT;
             if (!$create) {
                 $this->showPageNotCreatedMessage($path);
             } else {
-                $title = $this->createOnePage($path, $text);
+                $title = $this->createOnePage($bookname, $path, $text);
                 $this->showPageCreatedMessage($path, $title);
             }
         }

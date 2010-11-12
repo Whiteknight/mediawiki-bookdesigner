@@ -6,12 +6,22 @@ class BookDesignerOptions {
     protected $pagelinktmpl = "* [[$1|$2]]";
     protected $chapterlinktmpl = "* [[$1|$2]]";
     protected $sectionheadtmpl = "== $1 ==";
+    protected $booknamespace = null;
 
     function getOptions() {
-        global $wgRequest;
+        global $wgRequest, $wgUser, $wgOut;
         $this->createleaves = $wgRequest->getCheck("optCreateLeaves");
         $this->useheader = $wgRequest->getCheck("optHeaderTemplate");
         $this->usefooter = $wgRequest->getCheck("optFooterTemplate");
+
+        $namespaceopt = $wgRequest->getVal("optNamespace");
+
+        if ($namespaceopt == "default")
+            $this->booknamespace = "";
+        else if ($namespaceopt == "specify")
+            $this->booknamespace = $wgRequest->getText("optNamespaceName") . ":";
+        else if ($namespaceopt == "user")
+            $this->booknamespace = $wgUser->getUserPage() . "/";
 
         $tmpl = $wgRequest->getText('optPageLinks');
         if (isset($tmpl) && strlen($tmpl) > 0)
@@ -24,6 +34,10 @@ class BookDesignerOptions {
         $tmpl = $wgRequest->getText('optHeaderStyle');
         if (isset($tmpl) && strlen($tmpl) > 0)
             $this->sectionheadtmpl = $tmpl;
+    }
+
+    function bookNamespace() {
+        return $this->booknamespace;
     }
 
     function pageLinkTemplate() {
@@ -75,14 +89,18 @@ class BookDesignerOptions {
         </h2>
         <div id="VBDOptionsInternal" style="display: none;">
             <b>{$this->getMessage('optsbook')}</b><br>
-            <input type="checkbox" name="optUseNamespace" disabled>
+            <input type="radio" name="optNamespace" value="default" checked>
+                {$this->getMessage('optdefaultnamespace')}
+            </input>
+            <br />
+            <input type="radio" name="optNamespace" value="specify">
                 {$this->getMessage('optusenamespace')}:
             </input>
-            <br>
-            <input type="text" style="margin-left: 6em;" name="optNamespace"
-                value="" disabled>
-            <br>
-            <input type="checkbox" name="optUseUserSpace" disabled>
+            <br />
+            <input type="text" style="margin-left: 6em;" name="optNamespaceName"
+                value="">
+            <br />
+            <input type="radio" name="optNamespace" value="user">
                 {$this->getMessage('optuseuserspace')}
             </input>
             <br>
