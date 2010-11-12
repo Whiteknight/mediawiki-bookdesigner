@@ -61,8 +61,11 @@ class BookDesigner extends SpecialPage {
         }
         if($wgRequest->wasPosted()) {
             if ($mode == 'verify') {
-                $this->options->getOptions();
-                $this->verifyPublishOutline();
+                $submit = $wgRequest->getVal("btnSubmit");
+                if ($submit == $this->getMessage("publishbutton")) {
+                    $this->options->getOptions();
+                    $this->verifyPublishOutline();
+                }
             }
             else if ($mode == 'publish') {
                 $this->reallyPublishOutline();
@@ -306,7 +309,8 @@ EOT;
     <!-- TODO: Add another button here to "save" an incomplete outline to a page
          somewhere in userspace, and maybe a button somewhere to "load" an
          existing outline. -->
-    <input type="submit" value="{$this->GetMessage('publishbutton')}" /><br>
+    <input type="submit" name="btnSubmit" value="{$this->GetMessage('publishbutton')}" />
+    <br>
 </form>
 
 EOD;
