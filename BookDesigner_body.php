@@ -382,7 +382,14 @@ EOD;
     }
 
     function hasOutlineManager() {
-        return true;
+        try {
+            $dbr = wfGetDB(DB_SLAVE);
+            $res = $dbr->select('bookdesigner_outlines', array('id'));
+            return true;
+        }
+        catch (Exception $e) {
+            return false;
+        }
     }
 
     function showOutlineManager() {
