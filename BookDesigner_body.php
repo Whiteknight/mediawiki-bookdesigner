@@ -92,44 +92,19 @@ class BookDesigner extends SpecialPage {
             $row = $dbr->fetchObject($res);
             $this->displayMainOutline($row->outline);
         }
-        else {
-            $text = <<<EOD
-<div>
-    Could not load outline.
-    <br />
-    <a href="{$wgScriptPath}/index.php?title=Special:BookDesigner">Back</a>
-</div>
-EOD;
-            $wgOut->addHTML($text);
-        }
+        else $this->showMessage("Could not load outline");
     }
 
     function deleteOutline($outlineid) {
-        global $wgUser, $wgScriptPath, $wgOut;
+        global $wgUser, $wgScriptPath;
         $dbw = wfGetDB(DB_MASTER);
         $res = $dbw->select('bookdesigner_outlines', 'user_id', 'id=' . $outlineid);
         if ($dbw->numRows($res) == 1 && $dbw->fetchObject($res)->user_id == $wgUser->getId()) {
             $dbw->delete('bookdesigner_outlines', array(
                 'id' => $outlineid
             ));
-            $text = <<<EOD
-<div>
-    BALEETED
-    <br />
-    <a href="{$wgScriptPath}/index.php?title=Special:BookDesigner">Back</a>
-</div>
-EOD;
-            $wgOut->addHTML($text);
-        } else {
-            $text = <<<EOD
-<div>
-    Not deleted
-    <br />
-    <a href="{$wgScriptPath}/index.php?title=Special:BookDesigner">Back</a>
-</div>
-EOD;
-            $wgOut->addHTML($text);
-        }
+            $this->showMessage("Outline deleted");
+        } else $this->showMessage("Could not delete outline");
     }
 
     function saveOutline() {
@@ -145,9 +120,14 @@ EOD;
             'bookname' => $this->titlepage->name(),
             'outline' => $text
         ));
+        $this->showMessage("Outline " . $this->titlepage->name() . " saved");
+    }
+
+    function showMessage($msg) {
+        global $wgOut, $wgScriptPath;
         $text =<<<EOD
 <div>
-    Outline for {$this->titlepage->name()} saved.
+    {$msg}
     <br />
     <a href="{$wgScriptPath}/index.php?title=Special:BookDesigner">Back</a>
 </div>
