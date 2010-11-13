@@ -371,7 +371,24 @@ EOT;
          somewhere in userspace, and maybe a button somewhere to "load" an
          existing outline. -->
     <input type="submit" name="btnSubmit" value="{$this->GetMessage('publishbutton')}" />
-    <div id="VBDOutlineManager">
+EOD;
+        $wgOut->addHTML($text);
+        if ($this->hasOutlineManager())
+            $this->showOutlineManager();
+        $text = <<<EOD
+</form>
+EOD;
+        $wgOut->addHTML($text);
+    }
+
+    function hasOutlineManager() {
+        return true;
+    }
+
+    function showOutlineManager() {
+        global $wgOut, $wgScriptPath;
+        $text = <<<EOD
+        <div id="VBDOutlineManager">
         <script type="text/javascript">
             function really_delete(id) {
                 var url = "{$wgScriptPath}/index.php?title=Special:BookDesigner/deleteoutline/" + id;
@@ -385,11 +402,9 @@ EOD;
         $this->getSavedOutlines();
         $text = <<<EOD
     </div>
-</form>
-
 EOD;
         $wgOut->addHTML($text);
-    }
+}
 
     function getSavedOutlines() {
         global $wgOut, $wgUser, $wgScriptPath;

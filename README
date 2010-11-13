@@ -14,9 +14,6 @@ file LICENSE for details.
 Requires MediaWiki 1.14.0. Originally developed with version 1.14.0, it may
 work with other versions but has not been tested.
 
-Currently relies on JQuery. It is not known whether this dependence will be
-expanded or dropped.
-
 == INSTALLATION ==
 
 Copy the contents of the distribution to the "extensions" directory of your
