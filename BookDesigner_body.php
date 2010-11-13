@@ -50,43 +50,109 @@ class BookDesigner extends SpecialPage {
         }
 
         $this->loadJSAndCSS();
-
         $mode = "outline";
-        $title = null;
+        $outlineid = 0;
 
         if(isset($par)) {
             $parts = explode('/', $par, 2);
             $mode = $parts[0];
-            #$title = $parts[1];
+            if (count($parts) > 1)
+                $outlineid = $parts[1];
         }
         if($wgRequest->wasPosted()) {
             if ($mode == 'verify') {
                 $submit = $wgRequest->getVal("btnSubmit");
-                if ($submit == $this->getMessage("publishbutton")) {
+                if ($submit == $this->GetMessage("publishbutton")) {
                     $this->options->getOptions();
                     $this->verifyPublishOutline();
-                }
+                } else if ($submit == $this->GetMessage("savebutton"))
+                    $this->saveOutline();
             }
-            else if ($mode == 'publish') {
-                $this->reallyPublishOutline();
-            }
-            else {
-                $this->unknownModeError('post', $mode, $title);
-            }
+            else if ($mode == 'publish') $this->reallyPublishOutline();
+            else $this->unknownModeError('post', $mode, $title);
         }
         else {
             # TODO: we've specified a book name, load that book into the outline
             #       $mode == 'outline' creates an empty outline with "title"
             #       $mode == 'preload' attempts to load an existing outline
             if (!isset($mode) || $mode == "" || $mode == "outline" || $mode == "preload") {
-                $this->displayMainOutline($mode, $title);
+                $this->displayMainOutline("");
                 return;
             }
-            else {
-                $this->unknownModeError('show', $mode, $title);
-            }
-
+            else if ($mode == 'loadoutline') $this->loadOutline($outlineid);
+            else if ($mode == 'deleteoutline') $this->deleteOutline($outlineid);
+            else $this->unknownModeError('show', $mode, $title);
         }
+    }
+
+    function loadOutline($outlineid) {
+        $dbr = wfGetDB(DB_SLAVE);
+        $res = $dbr->select('bookdesigner_outlines', array("user_id", "outline"), 'id=' . $outlineid);
+        if ($dbr->numRows($res) == 1) {
+            $row = $dbr->fetchObject($res);
+            $this->displayMainOutline($row->outline);
+        }
+        else {
+            $text = <<<EOD
+<div>
+    Could not load outline.
+    <br />
+    <a href="{$wgScriptPath}/index.php?title=Special:BookDesigner">Back</a>
+</div>
+EOD;
+            $wgOut->addHTML($text);
+        }
+    }
+
+    function deleteOutline($outlineid) {
+        global $wgUser, $wgScriptPath, $wgOut;
+        $dbw = wfGetDB(DB_MASTER);
+        $res = $dbw->select('bookdesigner_outlines', 'user_id', 'id=' . $outlineid);
+        if ($dbw->numRows($res) == 1 && $dbw->fetchObject($res)->user_id == $wgUser->getId()) {
+            $dbw->delete('bookdesigner_outlines', array(
+                'id' => $outlineid
+            ));
+            $text = <<<EOD
+<div>
+    BALEETED
+    <br />
+    <a href="{$wgScriptPath}/index.php?title=Special:BookDesigner">Back</a>
+</div>
+EOD;
+            $wgOut->addHTML($text);
+        } else {
+            $text = <<<EOD
+<div>
+    Not deleted
+    <br />
+    <a href="{$wgScriptPath}/index.php?title=Special:BookDesigner">Back</a>
+</div>
+EOD;
+            $wgOut->addHTML($text);
+        }
+    }
+
+    function saveOutline() {
+        global $wgUser, $wgOut, $wgRequest, $wgScriptPath;
+        $text = $wgRequest->getText('VBDHiddenTextArea');
+        $parser = new BookDesignerParser($this, null);
+        $parser->parseTitlePageOnly($text);
+        $this->titlepage = $parser->titlePage();
+        $dbw = wfGetDB(DB_MASTER);
+        $dbw->insert('bookdesigner_outlines', array(
+            'user_id' => $wgUser->getId(),
+            'savedate' => gmdate('Y-m-d H:i:s'),
+            'bookname' => $this->titlepage->name(),
+            'outline' => $text
+        ));
+        $text =<<<EOD
+<div>
+    Outline for {$this->titlepage->name()} saved.
+    <br />
+    <a href="{$wgScriptPath}/index.php?title=Special:BookDesigner">Back</a>
+</div>
+EOD;
+        $wgOut->addHTML($text);
     }
 
     function showauthenticationError() {
@@ -103,16 +169,12 @@ EOT;
         $wgOut->addHTML($text);
     }
 
-    function unknownModeError($type, $mode, $title) {
+    function unknownModeError($type, $mode) {
         global $wgOut;
-        $title_extra = "";
-        if (isset($title)) {
-            $title_extra = "with arguments (" . $title . ")";
-        }
         $text = <<<EOD
 <p>
     <span style='color: red; font-weight: bold;'>Error:</span>
-    Could not {$type} with mode {$mode} $title_extra
+    Could not {$type} with mode {$mode}
 </p>
 
 EOD;
@@ -273,7 +335,7 @@ EOT;
         }
     }
 
-    function displayMainOutline() {
+    function displayMainOutline($inittext) {
         global $wgOut, $wgScriptPath;
 
         # TODO: Have a hidden field somewhere that we can hold a list of
@@ -282,6 +344,7 @@ EOT;
 
 <form action="{$wgScriptPath}/index.php?title=Special:BookDesigner/verify" method="POST">
     <textarea name="VBDHiddenTextArea" id="VBDHiddenTextArea" style="display: none;">
+        {$inittext}
     </textarea>
     <div id="VBDWelcomeSpan">
         {$this->GetMessage('welcome')}
@@ -310,11 +373,38 @@ EOT;
          somewhere in userspace, and maybe a button somewhere to "load" an
          existing outline. -->
     <input type="submit" name="btnSubmit" value="{$this->GetMessage('publishbutton')}" />
-    <br>
+    <div id="VBDOutlineManager">
+        <input type="submit" name="btnSubmit" value="{$this->GetMessage('savebutton')}" />
+EOD;
+        $wgOut->addHTML($text);
+        $this->getSavedOutlines();
+        $text = <<<EOD
+    </div>
 </form>
 
 EOD;
         $wgOut->addHTML($text);
+    }
+
+    function getSavedOutlines() {
+        global $wgOut, $wgUser, $wgScriptPath;
+        $dbr = wfGetDB(DB_SLAVE);
+        $res = $dbr->select('bookdesigner_outlines', array('id', 'savedate', 'bookname'), 'user_id=' . $wgUser->getId());
+        while($row = $dbr->fetchObject($res)) {
+            $text = <<<EOD
+            <div class="WBVSavedOutlineEntry">
+                <b>{$row->bookname}</b>: {$row->savedate}
+                <a href="{$wgScriptPath}/index.php?title=Special:BookDesigner/loadoutline/{$row->id}">
+                    Load
+                </a>
+                &mdash;
+                <a href="{$wgScriptPath}/index.php?title=Special:BookDesigner/deleteoutline/{$row->id}">
+                    Delete
+                </a>
+            </div>
+EOD;
+            $wgOut->addHTML($text);
+        }
     }
 }
 

@@ -45,6 +45,8 @@ EOQSI
     'bookdesigner-optheaderstyle'      => 'Headers:',
     'bookdesigner-optautogenerate'     => 'Autogenerate',
     'bookdesigner-publishbutton'       => 'Publish Book!',
+    'bookdesigner-savebutton'          => 'Save',
+    'bookdesigner-loadbutton'          => 'Load',
     'bookdesigner-defaultheader'       => <<<EOHEADER
 <div style="border: 1px solid #AAAAAA; background-color: #F8F8F8; padding: 5px; margin: auto; width: 95%">
 <center>

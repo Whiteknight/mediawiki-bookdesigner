@@ -26,9 +26,12 @@ var vbd = {
 // Set VBD to load on document load
 addOnloadHook(function() {
     vbd.version = document.getElementById("VBDVersion").value;
-    vbd.pageTree = new BookPage(vbd.defName);
+    if (!vbd.parseExistingOutline())
+        vbd.pageTree = new BookPage(vbd.defName);
     vbd.visual();
 });
+
+
 
 // Basic array management functions
 vbd.CopyArray = function(array) {
@@ -263,6 +266,57 @@ vbd.ToggleGUIWidget = function(pane, link) {
     span.style.display = (state == "none") ? "block" : "none";
     var linkelem = document.getElementById(link);
     linkelem.innerHTML = (state == "none") ? "Hide" : "Show";
+}
+
+vbd.parseExistingOutline = function() {
+    var text = document.getElementById('VBDHiddenTextArea').value;
+    if (text.indexOf('<') == -1)
+        return false;
+    text = "<?xml version='1.0' encoding='UTF-8' ?>\n" + text;
+    var xmlDoc = null;
+    if (window.DOMParser) {
+        var parser = new DOMParser();
+        xmlDoc = parser.parseFromString(text, "application/xml");
+    } else {
+        xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
+        xmlDoc.async = "false";
+        xmlDoc.loadXML(text);
+    }
+    if (xmlDoc == null)
+        return false;
+    var node = vbd.readNodeFromOutline(xmlDoc.documentElement);
+    if (node == null)
+        return false;
+    this.pageTree = node;
+    return true;
+}
+
+vbd.readNodeFromOutline = function (node) {
+    var n = node.getAttribute('name');
+    var page = new BookPage(n);
+    var children = node.getElementsByTagName("page");
+    for (var i = 0; i < children.length; i++) {
+        var kid = vbd.readNodeFromOutline(children[i]);
+        page.addSubpage(kid);
+        vbd.newpagecnt++;
+    }
+    children = node.getElementsByTagName('heading');
+    for (var i = 0; i < children.length; i++) {
+        var headname = children[i].getAttribute('name');
+        var head = new PageHeading(headname);
+        page.addHeading(head);
+        vbd.newheadcnt++;
+        vbd.getHeadingChildren(head, children[i]);
+    }
+    return page;
+}
+
+vbd.getHeadingChildren = function(heading, node) {
+    var children = node.getElementsByTagName("page");
+    for (var i = 0; i < children.length; i++) {
+        var page = vbd.readNodeFromOutline(children[i]);
+        heading.addSubpage(page);
+    }
 }
 
 

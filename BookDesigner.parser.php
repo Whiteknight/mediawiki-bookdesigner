@@ -40,6 +40,8 @@ class BookDesignerParser {
     }
 
     function getPageHeadText($isroot) {
+        if ($this->options == null)
+            return "";
         $text = $this->getHeaderTemplateTag() . "\n\n";
         return $text;
     }
@@ -118,6 +120,17 @@ class BookDesignerParser {
         return $old;
     }
 
+    function parseTitlePageOnly($text) {
+        $lines = explode("\n", $text);
+        for ($i = 0; $i < sizeof($lines); $i++) {
+            $line = $lines[$i];
+            if (preg_match("/<page name='([^']+)' children='(\d+)'>/", $line, $matches)) {
+                $name = $matches[1];
+                $this->startPage($name, $name, $matches[2]);
+                return;
+            }
+        }
+    }
 
     # Home-brewed XML parser. I'm not familiar with any PHP XML libraries or
     # utilities, and I don't know what features the MediaWiki server is going
