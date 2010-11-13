@@ -45,8 +45,16 @@ EOQSI
     'bookdesigner-optheaderstyle'      => 'Headers:',
     'bookdesigner-optautogenerate'     => 'Autogenerate',
     'bookdesigner-publishbutton'       => 'Publish Book!',
-    'bookdesigner-savebutton'          => 'Save',
+    'bookdesigner-savebutton'          => 'Save Outline',
     'bookdesigner-loadbutton'          => 'Load',
+    'bookdesigner-backnav'             => 'Back',
+    'bookdesigner-error'               => 'Error:',
+    'bookdesigner-errload'             => 'Could not load outline',
+    'bookdesigner-msgdeleted'          => 'Outline successfully deleted',
+    'bookdesigner-errdeleted'          => 'Outline could not be deleted',
+    'bookdesigner-msgsaved'            => 'Outline saved successfully',
+    'bookdesigner-errauthenticate'     => 'You must be logged in and have <b>buildbook</b> permission to created books using this tool.',
+    'bookdesigner-reallydelete'        => 'Really delete this outline?',
     'bookdesigner-defaultheader'       => <<<EOHEADER
 <div style="border: 1px solid #AAAAAA; background-color: #F8F8F8; padding: 5px; margin: auto; width: 95%">
 <center>

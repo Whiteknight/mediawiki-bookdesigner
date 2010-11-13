@@ -11,6 +11,8 @@ class BookDesigner extends SpecialPage {
     protected $validuser = false;
     protected $titlepage = null;
 
+    # HELPER METHODS
+
     function validateUser()
     {
         global $wgUser;
@@ -22,17 +24,64 @@ class BookDesigner extends SpecialPage {
         return $this->validuser;
     }
 
-    function createOnePage($bookname, $path, $text) {
-        global $wgOut, $wgScriptPath;
-        $title = Title::newFromText($path);
-        $article = new Article($title);
-        $article->doEdit($text, "Creating page for book '{$bookname}'. " .
-            "Automated page creation by BookDesigner");
-        return $title;
-    }
-
     function GetMessage($msgname) {
         return wfMsg('bookdesigner-' . $msgname);
+    }
+
+    function showMessage($msg) {
+        global $wgOut, $wgScriptPath;
+        $text =<<<EOD
+<div class="VBDMessageDiv">
+    {$this->GetMessage($msg)}
+    <br />
+    <a href="{$wgScriptPath}/index.php?title=Special:BookDesigner">
+        {$this->GetMessage('backnav')}
+    </a>
+</div>
+EOD;
+        $wgOut->addHTML($text);
+    }
+
+    function showErrorMessage($msg) {
+        global $wgOut, $wgScriptPath;
+        $text =<<<EOD
+<div class="VBDErrorMessageDiv">
+    <span class="VBDErrorSpan">{$this->GetMessage("error")}</span>
+    {$this->GetMessage($msg)}
+    <br />
+    <a href="{$wgScriptPath}/index.php?title=Special:BookDesigner">
+        {$this->GetMessage('backnav')}
+    </a>
+</div>
+EOD;
+        $wgOut->addHTML($text);
+    }
+
+    function loadJSAndCSS() {
+        global $wgScriptPath, $wgOut;
+        $jspath  = "$wgScriptPath/extensions/BookDesigner";
+        $wgOut->addScriptFile($jspath . "/bookpage.js");
+        $wgOut->addScriptFile($jspath . "/pagehead.js");
+        $wgOut->addScriptFile($jspath . "/designer.js");
+        $this->addCSSFile("designer.css");
+    }
+
+    function getVersion() {
+        global $wg_VBDExtensionVersion;
+        return $wg_VBDExtensionVersion;
+    }
+
+    function addCSSFile($file) {
+        global $wgScriptPath, $wgOut;
+        $csspath = "$wgScriptPath/extensions/BookDesigner";
+        if(method_exists($wgOut, "addExtensionStyle")) {
+            $wgOut->addExtensionStyle($csspath . "/" . $file);
+        } else {
+            # This is a hack for older MediaWiki (1.14 and below?).
+            # addStyle prepends "$wgScriptPath/skins/" to the front,
+            # so we need to navigate to the correct place
+            $wgOut->addStyle("../extensions/BookDesigner/" . $file);
+        }
     }
 
     # Main function, this is where execution starts
@@ -43,15 +92,14 @@ class BookDesigner extends SpecialPage {
         global $wgRequest, $wgOut;
         $this->setHeaders();
         $wgOut->setPageTitle("Book Designer");
-
-        if (!$this->validateUser()) {
-            $this->showAuthenticationError();
-            return;
-        }
-
         $this->loadJSAndCSS();
         $mode = "outline";
         $outlineid = 0;
+
+        if (!$this->validateUser()) {
+            $this->showErrorMessage('errauthenticate');
+            return;
+        }
 
         if(isset($par)) {
             $parts = explode('/', $par, 2);
@@ -68,8 +116,10 @@ class BookDesigner extends SpecialPage {
                 } else if ($submit == $this->GetMessage("savebutton"))
                     $this->saveOutline();
             }
-            else if ($mode == 'publish') $this->reallyPublishOutline();
-            else $this->unknownModeError('post', $mode, $title);
+            else if ($mode == 'publish')
+                $this->reallyPublishOutline();
+            else
+                $this->unknownModeError('post', $mode, $title);
         }
         else {
             # TODO: we've specified a book name, load that book into the outline
@@ -79,11 +129,28 @@ class BookDesigner extends SpecialPage {
                 $this->displayMainOutline("");
                 return;
             }
-            else if ($mode == 'loadoutline') $this->loadOutline($outlineid);
-            else if ($mode == 'deleteoutline') $this->deleteOutline($outlineid);
-            else $this->unknownModeError('show', $mode, $title);
+            else if ($mode == 'loadoutline' && isset($outlineid))
+                $this->loadOutline($outlineid);
+            else if ($mode == 'deleteoutline' && isset($outlineid))
+                $this->deleteOutline($outlineid);
+            else
+                $this->unknownModeError('show', $mode, $title);
         }
     }
+
+    function unknownModeError($type, $mode) {
+        global $wgOut;
+        $text = <<<EOD
+<p>
+    <span style='color: red; font-weight: bold;'>Error:</span>
+    Could not {$type} with mode {$mode}
+</p>
+
+EOD;
+        $wgOut->addHTML($text);
+    }
+
+    # LOAD/SAVE/DELETE FUNCTIONS
 
     function loadOutline($outlineid) {
         $dbr = wfGetDB(DB_SLAVE);
@@ -92,7 +159,7 @@ class BookDesigner extends SpecialPage {
             $row = $dbr->fetchObject($res);
             $this->displayMainOutline($row->outline);
         }
-        else $this->showMessage("Could not load outline");
+        else $this->showErrorMessage("errload");
     }
 
     function deleteOutline($outlineid) {
@@ -103,8 +170,9 @@ class BookDesigner extends SpecialPage {
             $dbw->delete('bookdesigner_outlines', array(
                 'id' => $outlineid
             ));
-            $this->showMessage("Outline deleted");
-        } else $this->showMessage("Could not delete outline");
+            $this->showMessage("msgdeleted");
+        } else
+            $this->showMessage("errdeleted");
     }
 
     function saveOutline() {
@@ -120,46 +188,10 @@ class BookDesigner extends SpecialPage {
             'bookname' => $this->titlepage->name(),
             'outline' => $text
         ));
-        $this->showMessage("Outline " . $this->titlepage->name() . " saved");
+        $this->showMessage('msgsaved');
     }
 
-    function showMessage($msg) {
-        global $wgOut, $wgScriptPath;
-        $text =<<<EOD
-<div>
-    {$msg}
-    <br />
-    <a href="{$wgScriptPath}/index.php?title=Special:BookDesigner">Back</a>
-</div>
-EOD;
-        $wgOut->addHTML($text);
-    }
-
-    function showauthenticationError() {
-        global $wgOut;
-        $text = <<<EOT
-<div>
-    <p>
-        <span style='color: darkred; font-weight: bold'>Error:</span>
-        You must be logged in and have 'buildbook' permission to created
-        books using this tool.
-    </p>
-</div>
-EOT;
-        $wgOut->addHTML($text);
-    }
-
-    function unknownModeError($type, $mode) {
-        global $wgOut;
-        $text = <<<EOD
-<p>
-    <span style='color: red; font-weight: bold;'>Error:</span>
-    Could not {$type} with mode {$mode}
-</p>
-
-EOD;
-        $wgOut->addHTML($text);
-    }
+    # VERIFY OUTLINE BEFORE PUBLISH FUNCTIONS
 
     function verifyPublishOutline() {
         global $wgRequest;
@@ -239,6 +271,8 @@ EOT;
         $wgOut->addHTML($text);
     }
 
+    # PUBLISH OUTLINE TO BOOK
+
     function reallyPublishOutline() {
         global $wgRequest, $wgOut;;
         $numpages = $wgRequest->getInt('VBDTotalPageCount');
@@ -261,6 +295,15 @@ EOT;
         # TODO: Show an "Oops!" delete/undo link here that goes back over
         #       the list of pages and deletes them all again (if the user
         #       is an admin)
+    }
+
+    function createOnePage($bookname, $path, $text) {
+        global $wgOut, $wgScriptPath;
+        $title = Title::newFromText($path);
+        $article = new Article($title);
+        $article->doEdit($text, "Creating page for book '{$bookname}'. " .
+            "Automated page creation by BookDesigner");
+        return $title;
     }
 
     function showPageNotCreatedMessage($path) {
@@ -288,32 +331,7 @@ EOT;
         $wgOut->addHTML($text);
     }
 
-    function loadJSAndCSS() {
-        global $wgScriptPath, $wgOut;
-        $jspath  = "$wgScriptPath/extensions/BookDesigner";
-        $wgOut->addScriptFile($jspath . "/bookpage.js");
-        $wgOut->addScriptFile($jspath . "/pagehead.js");
-        $wgOut->addScriptFile($jspath . "/designer.js");
-        $this->addCSSFile("designer.css");
-    }
-
-    function getVersion() {
-        global $wg_VBDExtensionVersion;
-        return $wg_VBDExtensionVersion;
-    }
-
-    function addCSSFile($file) {
-        global $wgScriptPath, $wgOut;
-        $csspath = "$wgScriptPath/extensions/BookDesigner";
-        if(method_exists($wgOut, "addExtensionStyle")) {
-            $wgOut->addExtensionStyle($csspath . "/" . $file);
-        } else {
-            # This is a hack for older MediaWiki (1.14 and below?).
-            # addStyle prepends "$wgScriptPath/skins/" to the front,
-            # so we need to navigate to the correct place
-            $wgOut->addStyle("../extensions/BookDesigner/" . $file);
-        }
-    }
+    # MAIN OUTLINE FUNCTIONS
 
     function displayMainOutline($inittext) {
         global $wgOut, $wgScriptPath;
@@ -354,6 +372,13 @@ EOT;
          existing outline. -->
     <input type="submit" name="btnSubmit" value="{$this->GetMessage('publishbutton')}" />
     <div id="VBDOutlineManager">
+        <script type="text/javascript">
+            function really_delete(id) {
+                var url = "{$wgScriptPath}/index.php?title=Special:BookDesigner/deleteoutline/" + id;
+                if(confirm("{$this->GetMessage('reallydelete')}"))
+                    document.location = url;
+            }
+        </script>
         <input type="submit" name="btnSubmit" value="{$this->GetMessage('savebutton')}" />
 EOD;
         $wgOut->addHTML($text);
@@ -372,15 +397,18 @@ EOD;
         $res = $dbr->select('bookdesigner_outlines', array('id', 'savedate', 'bookname'), 'user_id=' . $wgUser->getId());
         while($row = $dbr->fetchObject($res)) {
             $text = <<<EOD
-            <div class="WBVSavedOutlineEntry">
+            <div class="VBDSavedOutlineEntry">
                 <b>{$row->bookname}</b>: {$row->savedate}
-                <a href="{$wgScriptPath}/index.php?title=Special:BookDesigner/loadoutline/{$row->id}">
-                    Load
-                </a>
-                &mdash;
-                <a href="{$wgScriptPath}/index.php?title=Special:BookDesigner/deleteoutline/{$row->id}">
-                    Delete
-                </a>
+                <br />
+                <div class="VBDSavedOutlineCommands">
+                    <a href="{$wgScriptPath}/index.php?title=Special:BookDesigner/loadoutline/{$row->id}">
+                        Load
+                    </a>
+                    &mdash;
+                    <a href="javascript: really_delete({$row->id})">
+                        Delete
+                    </a>
+                </div>
             </div>
 EOD;
             $wgOut->addHTML($text);
