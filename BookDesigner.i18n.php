@@ -8,7 +8,6 @@ in the PHP backend and transmit that to the client. The JS will then
 read string constants from this table to generate the UI. For the rest
 of the UI, we can insert string constants directly.
 */
-// TODO: Can we get access to the raw $messages array from BookDesigner_body.php?
 /* *** English *** */
 $messages['en'] = array(
     'bookdesigner' => 'Book Designer',
@@ -55,6 +54,8 @@ EOQSI
     'bookdesigner-msgsaved'            => 'Outline saved successfully',
     'bookdesigner-errauthenticate'     => 'You must be logged in and have <b>buildbook</b> permission to created books using this tool.',
     'bookdesigner-reallydelete'        => 'Really delete this outline?',
+    'bookdesigner-shared'              => 'Outline has been shared',
+    'bookdesigner-unshared'            => 'Outline has been unshared',
     'bookdesigner-defaultheader'       => <<<EOHEADER
 <div style="border: 1px solid #AAAAAA; background-color: #F8F8F8; padding: 5px; margin: auto; width: 95%">
 <center>

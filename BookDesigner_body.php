@@ -126,19 +126,25 @@ EOD;
             #       $mode == 'outline' creates an empty outline with "title"
             #       $mode == 'preload' attempts to load an existing outline
             if (!isset($mode) || $mode == "" || $mode == "outline" || $mode == "preload") {
-                $this->displayMainOutline("");
+                $this->displayMainOutline("", 0, false);
                 return;
             }
             else if ($mode == 'loadoutline' && isset($outlineid))
                 $this->loadOutline($outlineid);
             else if ($mode == 'deleteoutline' && isset($outlineid))
                 $this->deleteOutline($outlineid);
+            else if ($mode == 'share' && isset($outlineid))
+                $this->shareOutline($outlineid);
+            else if ($mode == 'unshare' && isset($outlineid))
+                $this->unshareOutline($outlineid);
             else
                 $this->unknownModeError('show', $mode, $title);
         }
     }
 
     function unknownModeError($type, $mode) {
+        # TODO: Covert showErrorMessage to take an array of parameters, and
+        #       use that to replace this function.
         global $wgOut;
         $text = <<<EOD
 <p>
@@ -150,16 +156,69 @@ EOD;
         $wgOut->addHTML($text);
     }
 
+    # SHARE/UNSHARE FUNCTIONS
+
+    function shareOutline($outlineid) {
+        global $wgUser;
+        $dbr = wfGetDB(DB_SLAVE);
+        $res = $dbr->select('bookdesigner_outlines',
+            array("id", "user_id", "shared", "outline"),
+            'id=' . $outlineid
+        );
+        if ($dbr->numRows($res) == 1) {
+            $row = $dbr->fetchObject($res);
+            if ($row->user_id == $wgUser->getId()) {
+                $dbw = wfGetDB(DB_MASTER);
+                $dbw->update('bookdesigner_outlines',
+                    array('shared' => 1),
+                    array('id' => $outlineid)
+                );
+            }
+        }
+        # TODO: Show some instructions about what it means to be shared
+        # TODO: Include a link that can be given to other users
+        $this->showMessage('shared');
+    }
+
+    function unshareOutline($outlineid) {
+        global $wgUser;
+        $dbr = wfGetDB(DB_SLAVE);
+        $res = $dbr->select('bookdesigner_outlines',
+            array("id", "user_id", "shared", "outline"),
+            'id=' . $outlineid
+        );
+        if ($dbr->numRows($res) == 1) {
+            $row = $dbr->fetchObject($res);
+            if ($row->user_id == $wgUser->getId()) {
+                $dbw = wfGetDB(DB_MASTER);
+                $dbw->update('bookdesigner_outlines',
+                    array('shared' => 0),
+                    array('id' => $outlineid)
+                );
+            }
+        }
+        $this->showMessage('unshared');
+    }
+
     # LOAD/SAVE/DELETE FUNCTIONS
 
     function loadOutline($outlineid) {
+        global $wgUser;
         $dbr = wfGetDB(DB_SLAVE);
-        $res = $dbr->select('bookdesigner_outlines', array("user_id", "outline"), 'id=' . $outlineid);
+        $res = $dbr->select('bookdesigner_outlines',
+            array("id", "user_id", "shared", "outline"),
+            'id=' . $outlineid
+        );
         if ($dbr->numRows($res) == 1) {
             $row = $dbr->fetchObject($res);
-            $this->displayMainOutline($row->outline);
+            global $wgOut;
+            if ($row->shared == 1 || $row->user_id == $wgUser->getId())
+                $this->displayMainOutline($row->outline, $row->id, $row->shared);
+            else
+                $this->showErrorMessage("errload");
         }
-        else $this->showErrorMessage("errload");
+        else
+            $this->showErrorMessage("errload");
     }
 
     function deleteOutline($outlineid) {
@@ -183,12 +242,15 @@ EOD;
         $this->titlepage = $parser->titlePage();
         $dbw = wfGetDB(DB_MASTER);
         $dbw->insert('bookdesigner_outlines', array(
-            'user_id' => $wgUser->getId(),
+            'user_id'  => $wgUser->getId(),
+            'shared'   => 0,
             'savedate' => gmdate('Y-m-d H:i:s'),
             'bookname' => $this->titlepage->name(),
-            'outline' => $text
+            'outline'  => $text
         ));
         $this->showMessage('msgsaved');
+        # TODO: Show the saved outline again on the same page
+        #       $this->loadOutline($id);
     }
 
     # VERIFY OUTLINE BEFORE PUBLISH FUNCTIONS
@@ -333,7 +395,7 @@ EOT;
 
     # MAIN OUTLINE FUNCTIONS
 
-    function displayMainOutline($inittext) {
+    function displayMainOutline($inittext, $id, $shared) {
         global $wgOut, $wgScriptPath;
 
         # TODO: Have a hidden field somewhere that we can hold a list of
@@ -344,6 +406,8 @@ EOT;
     <textarea name="VBDHiddenTextArea" id="VBDHiddenTextArea" style="display: none;">
         {$inittext}
     </textarea>
+    <input type="hidden" name="VBDOutlineID" id="VBDOutlineID" value="{$id}"/>
+    <input type="hidden" name="VBDShared" id="VBDShared" value="{$shared}"/>
     <div id="VBDWelcomeSpan">
         {$this->GetMessage('welcome')}
     </div>
@@ -416,7 +480,10 @@ EOD;
     function getSavedOutlines() {
         global $wgOut, $wgUser, $wgScriptPath;
         $dbr = wfGetDB(DB_SLAVE);
-        $res = $dbr->select('bookdesigner_outlines', array('id', 'savedate', 'bookname'), 'user_id=' . $wgUser->getId());
+        $res = $dbr->select('bookdesigner_outlines',
+            array('id', 'savedate', 'bookname', 'shared'),
+            'user_id=' . $wgUser->getId()
+        );
         while($row = $dbr->fetchObject($res)) {
             $text = <<<EOD
             <div class="VBDSavedOutlineEntry">
@@ -430,6 +497,24 @@ EOD;
                     <a href="javascript: really_delete({$row->id})">
                         Delete
                     </a>
+                    &mdash;
+EOD;
+            $wgOut->addHTML($text);
+            if ($row->shared == 0) {
+                $text = <<<EOD
+                    <a href="{$wgScriptPath}/index.php?title=Special:BookDesigner/share/{$row->id}">
+                        Share
+                    </a>
+EOD;
+            } else {
+                $text = <<<EOD
+                    <a href="{$wgScriptPath}/index.php?title=Special:BookDesigner/unshare/{$row->id}">
+                        Unshare
+                    </a>
+EOD;
+            }
+            $wgOut->addHTML($text);
+            $text = <<<EOD
                 </div>
             </div>
 EOD;
