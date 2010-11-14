@@ -14,8 +14,7 @@ class BookDesigner extends SpecialPage {
 
     # HELPER METHODS
 
-    function validateUser()
-    {
+    function validateUser() {
         global $wgUser;
         if (!$this->userCanExecute($wgUser)) {
             $this->displayRestrictionError();
@@ -32,25 +31,17 @@ class BookDesigner extends SpecialPage {
     function showMessage($msg, $back) {
         global $wgOut, $wgScriptPath;
         $id = $this->msgid++;
-        $backtxt = "";
-        if ($back) {
-            $backtxt = <<<EOD
-    <a href="{$wgScriptPath}/index.php?title=Special:BookDesigner">
-        {$this->GetMessage('backnav')}
-    </a>
-EOD;
-        } else {
-            $backtxt = <<<EOD
-    <a href="javascript: vbd.KillGUIWidget('bookdesigner-msg-{$id}');">
-        {$this->GetMessage('hide')}
-    </a>
-EOD;
-        }
+        $backlink = $back ?
+            "{$wgScriptPath}/index.php?title=Special:BookDesigner" :
+            "javascript: vbd.KillGUIWidget('bookdesigner-msg-{$id}');";
+        $backtext = $back ? $this->GetMessage('backnav') : $this->GetMessage('hide');
         $text =<<<EOD
 <div class="VBDMessageDiv" id="bookdesigner-msg-{$id}">
     {$this->GetMessage($msg)}
     <br />
-    {$backtxt}
+    <a href="{$backlink}">
+        {$backtext}
+    </a>
 </div>
 EOD;
         $wgOut->addHTML($text);
@@ -58,27 +49,19 @@ EOD;
 
     function showErrorMessage($msg, $back) {
         global $wgOut, $wgScriptPath;
-
-        $backtxt = "";
-        if ($back) {
-            $backtxt = <<<EOD
-    <a href="{$wgScriptPath}/index.php?title=Special:BookDesigner">
-        {$this->GetMessage('backnav')}
-    </a>
-EOD;
-        } else {
-            $backtxt = <<<EOD
-    <a href="javascript: vbd.KillGUIWidget('bookdesigner-msg-{$id}');">
-        {$this->GetMessage('hide')}
-    </a>
-EOD;
-        }
+        $id = $this->msgid++;
+        $backlink = $back ?
+            "{$wgScriptPath}/index.php?title=Special:BookDesigner" :
+            "javascript: vbd.KillGUIWidget('bookdesigner-msg-{$id}');";
+        $backtext = $back ? $this->GetMessage('backnav') : $this->GetMessage('hide');
         $text =<<<EOD
 <div class="VBDErrorMessageDiv">
     <span class="VBDErrorSpan">{$this->GetMessage("error")}</span>
     {$this->GetMessage($msg)}
     <br />
-    {$backtxt}
+    <a href="{$backlink}">
+        {$backtext}
+    </a>
 </div>
 EOD;
         $wgOut->addHTML($text);
@@ -125,7 +108,7 @@ EOD;
         $outlineid = 0;
 
         if (!$this->validateUser()) {
-            $this->showErrorMessage('errauthenticate', false);
+            $this->showErrorMessage('errauthenticate', true);
             return;
         }
 
@@ -239,7 +222,6 @@ EOD;
         );
         if ($dbr->numRows($res) == 1) {
             $row = $dbr->fetchObject($res);
-            global $wgOut;
             if ($row->shared == 1 || $row->user_id == $wgUser->getId())
                 $this->displayMainOutline($row->outline, $row->id, $row->shared);
             else {
@@ -324,9 +306,9 @@ EOT;
             $i++;
         }
         $text = <<<EOT
-    <input type="submit" value="Publish" />
-    <a href="$wgScriptPath/index.php?title=Special:BookDesigner">
-        Cancel
+    <input type="submit" value="{$this->GetMessage('publishbutton')}" />
+    <a href="{$wgScriptPath}/index.php?title=Special:BookDesigner">
+        {$this->GetMessage('backnav')}
     </a>
     <input type="hidden" name="VBDTotalPageCount" value="{$numpages}" />
     <input type="hidden" name="VBDBookName" value="{$this->titlepage->name()}" />
@@ -489,7 +471,7 @@ EOD;
     function showOutlineManager() {
         global $wgOut, $wgScriptPath;
         $text = <<<EOD
-        <div id="VBDOutlineManager">
+    <div id="VBDOutlineManager">
         <script type="text/javascript">
             function really_delete(id) {
                 var url = "{$wgScriptPath}/index.php?title=Special:BookDesigner/deleteoutline/" + id;

@@ -300,25 +300,24 @@ vbd.parseExistingOutline = function() {
 vbd.readNodeFromOutline = function (node) {
     var n = node.getAttribute('name');
     var page = new BookPage(n);
-    var children = node.getElementsByTagName("page");
-    for (var i = 0; i < children.length; i++) {
-        var kid = vbd.readNodeFromOutline(children[i]);
-        page.addSubpage(kid);
-        vbd.newpagecnt++;
-    }
-    children = node.getElementsByTagName('heading');
-    for (var i = 0; i < children.length; i++) {
-        var headname = children[i].getAttribute('name');
-        var head = new PageHeading(headname);
-        page.addHeading(head);
-        vbd.newheadcnt++;
-        vbd.getHeadingChildren(head, children[i]);
+    for (var i = 0; i < node.children.length; i++) {
+        if (node.children[i].tagName == "page") {
+            var kid = vbd.readNodeFromOutline(node.children[i]);
+            page.addSubpage(kid);
+            vbd.newpagecnt++;
+        } else if (node.children[i].tagName == "heading") {
+            var headname = node.children[i].getAttribute('name');
+            var head = new PageHeading(headname);
+            page.addHeading(head);
+            vbd.newheadcnt++;
+            vbd.getHeadingChildren(head, node.children[i]);
+        }
     }
     return page;
 }
 
 vbd.getHeadingChildren = function(heading, node) {
-    var children = node.getElementsByTagName("page");
+    var children = node.children;
     for (var i = 0; i < children.length; i++) {
         var page = vbd.readNodeFromOutline(children[i]);
         heading.addSubpage(page);
