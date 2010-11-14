@@ -10,6 +10,7 @@ class BookDesigner extends SpecialPage {
     protected $options;
     protected $validuser = false;
     protected $titlepage = null;
+    protected $msgid = 0;
 
     # HELPER METHODS
 
@@ -30,26 +31,7 @@ class BookDesigner extends SpecialPage {
 
     function showMessage($msg, $back) {
         global $wgOut, $wgScriptPath;
-        $backtxt = "";
-        if ($back) {
-            $backtxt = <<<EOD
-    <a href="{$wgScriptPath}/index.php?title=Special:BookDesigner">
-        {$this->GetMessage('backnav')}
-    </a>
-EOD;
-        }
-        $text =<<<EOD
-<div class="VBDMessageDiv">
-    {$this->GetMessage($msg)}
-    <br />
-    {$backtxt}
-</div>
-EOD;
-        $wgOut->addHTML($text);
-    }
-
-    function showErrorMessage($msg) {
-        global $wgOut, $wgScriptPath;
+        $id = $this->msgid++;
         $backtxt = "";
         if ($back) {
             $backtxt = <<<EOD
@@ -58,7 +40,38 @@ EOD;
     </a>
 EOD;
         } else {
-            # TODO: Show a javascripty link to hide the message
+            $backtxt = <<<EOD
+    <a href="javascript: vbd.KillGUIWidget('bookdesigner-msg-{$id}');">
+        {$this->GetMessage('hide')}
+    </a>
+EOD;
+        }
+        $text =<<<EOD
+<div class="VBDMessageDiv" id="bookdesigner-msg-{$id}">
+    {$this->GetMessage($msg)}
+    <br />
+    {$backtxt}
+</div>
+EOD;
+        $wgOut->addHTML($text);
+    }
+
+    function showErrorMessage($msg, $back) {
+        global $wgOut, $wgScriptPath;
+
+        $backtxt = "";
+        if ($back) {
+            $backtxt = <<<EOD
+    <a href="{$wgScriptPath}/index.php?title=Special:BookDesigner">
+        {$this->GetMessage('backnav')}
+    </a>
+EOD;
+        } else {
+            $backtxt = <<<EOD
+    <a href="javascript: vbd.KillGUIWidget('bookdesigner-msg-{$id}');">
+        {$this->GetMessage('hide')}
+    </a>
+EOD;
         }
         $text =<<<EOD
 <div class="VBDErrorMessageDiv">
@@ -104,6 +117,7 @@ EOD;
         #       require certain permissions (either admin, or a custom
         #       permission or something)
         global $wgRequest, $wgOut;
+        $this->msgid = 0;
         $this->setHeaders();
         $wgOut->setPageTitle("Book Designer");
         $this->loadJSAndCSS();
@@ -111,7 +125,7 @@ EOD;
         $outlineid = 0;
 
         if (!$this->validateUser()) {
-            $this->showErrorMessage('errauthenticate');
+            $this->showErrorMessage('errauthenticate', false);
             return;
         }
 
@@ -217,7 +231,7 @@ EOD;
     # LOAD/SAVE/DELETE FUNCTIONS
 
     function loadOutline($outlineid) {
-        global $wgUser;
+        global $wgUser, $wgRequest;
         $dbr = wfGetDB(DB_SLAVE);
         $res = $dbr->select('bookdesigner_outlines',
             array("id", "user_id", "shared", "outline"),
@@ -228,11 +242,13 @@ EOD;
             global $wgOut;
             if ($row->shared == 1 || $row->user_id == $wgUser->getId())
                 $this->displayMainOutline($row->outline, $row->id, $row->shared);
-            else
-                $this->showErrorMessage("errload");
+            else {
+                $this->showErrorMessage("errload", false);
+                $this->displayMainOutline($wgRequest->getText("VBDHiddenTextArea"), 0, false);
+            }
         }
         else
-            $this->showErrorMessage("errload");
+            $this->showErrorMessage("errload", true);
     }
 
     function deleteOutline($outlineid) {
@@ -246,7 +262,7 @@ EOD;
             $this->showMessage("msgdeleted", false);
             $this->displayMainOutline("", 0, false);
         } else
-            $this->showMessage("errdeleted", true);
+            $this->showErrorMessage("errdeleted", true);
     }
 
     function saveOutline() {

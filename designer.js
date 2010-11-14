@@ -268,6 +268,12 @@ vbd.ToggleGUIWidget = function(pane, link) {
     linkelem.innerHTML = (state == "none") ? "Hide" : "Show";
 }
 
+vbd.KillGUIWidget = function(id) {
+    var elem = document.getElementById(id);
+    if (elem)
+        elem.style.display = "none";
+}
+
 vbd.parseExistingOutline = function() {
     var text = document.getElementById('VBDHiddenTextArea').value;
     if (text.indexOf('<') == -1)
