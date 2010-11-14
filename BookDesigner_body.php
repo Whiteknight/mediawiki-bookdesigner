@@ -28,15 +28,21 @@ class BookDesigner extends SpecialPage {
         return wfMsg('bookdesigner-' . $msgname);
     }
 
-    function showMessage($msg) {
+    function showMessage($msg, $back) {
         global $wgOut, $wgScriptPath;
+        $backtxt = "";
+        if ($back) {
+            $backtxt = <<<EOD
+    <a href="{$wgScriptPath}/index.php?title=Special:BookDesigner">
+        {$this->GetMessage('backnav')}
+    </a>
+EOD;
+        }
         $text =<<<EOD
 <div class="VBDMessageDiv">
     {$this->GetMessage($msg)}
     <br />
-    <a href="{$wgScriptPath}/index.php?title=Special:BookDesigner">
-        {$this->GetMessage('backnav')}
-    </a>
+    {$backtxt}
 </div>
 EOD;
         $wgOut->addHTML($text);
@@ -44,14 +50,22 @@ EOD;
 
     function showErrorMessage($msg) {
         global $wgOut, $wgScriptPath;
+        $backtxt = "";
+        if ($back) {
+            $backtxt = <<<EOD
+    <a href="{$wgScriptPath}/index.php?title=Special:BookDesigner">
+        {$this->GetMessage('backnav')}
+    </a>
+EOD;
+        } else {
+            # TODO: Show a javascripty link to hide the message
+        }
         $text =<<<EOD
 <div class="VBDErrorMessageDiv">
     <span class="VBDErrorSpan">{$this->GetMessage("error")}</span>
     {$this->GetMessage($msg)}
     <br />
-    <a href="{$wgScriptPath}/index.php?title=Special:BookDesigner">
-        {$this->GetMessage('backnav')}
-    </a>
+    {$backtxt}
 </div>
 EOD;
         $wgOut->addHTML($text);
@@ -159,7 +173,7 @@ EOD;
     # SHARE/UNSHARE FUNCTIONS
 
     function shareOutline($outlineid) {
-        global $wgUser;
+        global $wgUser, $wgRequest;
         $dbr = wfGetDB(DB_SLAVE);
         $res = $dbr->select('bookdesigner_outlines',
             array("id", "user_id", "shared", "outline"),
@@ -175,13 +189,12 @@ EOD;
                 );
             }
         }
-        # TODO: Show some instructions about what it means to be shared
-        # TODO: Include a link that can be given to other users
-        $this->showMessage('shared');
+        $this->showMessage('shared', false);
+        $this->displayMainOutline($wgRequest->getText("VBDHiddenTextArea"), 0, false);
     }
 
     function unshareOutline($outlineid) {
-        global $wgUser;
+        global $wgUser, $wgRequest;
         $dbr = wfGetDB(DB_SLAVE);
         $res = $dbr->select('bookdesigner_outlines',
             array("id", "user_id", "shared", "outline"),
@@ -197,7 +210,8 @@ EOD;
                 );
             }
         }
-        $this->showMessage('unshared');
+        $this->showMessage('unshared', false);
+        $this->displayMainOutline($wgRequest->getText("VBDHiddenTextArea"), 0, false);
     }
 
     # LOAD/SAVE/DELETE FUNCTIONS
@@ -229,9 +243,10 @@ EOD;
             $dbw->delete('bookdesigner_outlines', array(
                 'id' => $outlineid
             ));
-            $this->showMessage("msgdeleted");
+            $this->showMessage("msgdeleted", false);
+            $this->displayMainOutline("", 0, false);
         } else
-            $this->showMessage("errdeleted");
+            $this->showMessage("errdeleted", true);
     }
 
     function saveOutline() {
@@ -248,9 +263,8 @@ EOD;
             'bookname' => $this->titlepage->name(),
             'outline'  => $text
         ));
-        $this->showMessage('msgsaved');
-        # TODO: Show the saved outline again on the same page
-        #       $this->loadOutline($id);
+        $this->showMessage('msgsaved', false);
+        $this->displayMainOutline($text, 0, false);
     }
 
     # VERIFY OUTLINE BEFORE PUBLISH FUNCTIONS
