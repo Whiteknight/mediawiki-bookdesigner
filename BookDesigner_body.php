@@ -509,23 +509,23 @@ EOD;
                     <a href="javascript: really_delete({$row->id})">
                         Delete
                     </a>
-                    &mdash;
+                    <!--&mdash;-->
 EOD;
             $wgOut->addHTML($text);
-            if ($row->shared == 0) {
-                $text = <<<EOD
-                    <a href="{$wgScriptPath}/index.php?title=Special:BookDesigner/share/{$row->id}">
-                        Share
-                    </a>
-EOD;
-            } else {
-                $text = <<<EOD
-                    <a href="{$wgScriptPath}/index.php?title=Special:BookDesigner/unshare/{$row->id}">
-                        Unshare
-                    </a>
-EOD;
-            }
-            $wgOut->addHTML($text);
+            #if ($row->shared == 0) {
+            #    $text = <<<EOD
+            #        <a href="{$wgScriptPath}/index.php?title=Special:BookDesigner/share/{$row->id}">
+            #            Share
+            #        </a>
+#EOD;
+            #} else {
+            #    $text = <<<EOD
+            #        <a href="{$wgScriptPath}/index.php?title=Special:BookDesigner/unshare/{$row->id}">
+            #            Unshare
+            #        </a>
+#EOD;
+            #}
+            #$wgOut->addHTML($text);
             $text = <<<EOD
                 </div>
             </div>
