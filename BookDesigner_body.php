@@ -222,7 +222,7 @@ EOD;
         );
         if ($dbr->numRows($res) == 1) {
             $row = $dbr->fetchObject($res);
-            if ($row->shared == 1 || $row->user_id == $wgUser->getId())
+            #if ($row->shared == 1 || $row->user_id == $wgUser->getId())
                 $this->displayMainOutline($row->outline, $row->id, $row->shared);
             else {
                 $this->showErrorMessage("errload", false);
@@ -407,11 +407,16 @@ EOT;
 
     # MAIN OUTLINE FUNCTIONS
 
+    function sanitizeOutline($text) {
+        $text = str_replace("<", "&lt;", $text);
+        $text = str_replace(">", "&gt;", $text);
+        return $text;
+    }
+
     function displayMainOutline($inittext, $id, $shared) {
         global $wgOut, $wgScriptPath;
+        $inittext = $this->sanitizeOutline($inittext);
 
-        # TODO: Have a hidden field somewhere that we can hold a list of
-        #       pages for pre-populating the outline.
         $text = <<<EOD
 
 <form action="{$wgScriptPath}/index.php?title=Special:BookDesigner/verify" method="POST">

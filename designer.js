@@ -276,6 +276,8 @@ vbd.KillGUIWidget = function(id) {
 
 vbd.parseExistingOutline = function() {
     var text = document.getElementById('VBDHiddenTextArea').value;
+    text = text.replace("&lt;", "<");
+    text = text.replace("&gt;", ">");
     if (text.indexOf('<') == -1)
         return false;
     text = "<?xml version='1.0' encoding='UTF-8' ?>\n" + text;

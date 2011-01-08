@@ -301,7 +301,8 @@ BookPage.prototype.closeButton = function () {
 // code form that is sent to the server for processing.
 BookPage.prototype.makeSaveText = function () {
     var children = this.subpages.length + this.headings.length;
-    var text = "<page name='" + this.pagename + "' children='" + children + "'>\n";
+    var saveTitle = this.pagename.replace("\"", "\\\"");
+    var text = "<page name=\"" + saveTitle + "\" children='" + children + "'>\n";
   //if(this.pagetext.length != 0) {
   //  var pagetext = this.pagetext;
   //  pagetext.replace(/\n/g, "\n&");

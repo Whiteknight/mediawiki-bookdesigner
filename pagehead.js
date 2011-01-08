@@ -163,7 +163,8 @@ PageHeading.prototype.closeButton = function () {
 // the server to actually build the page.
 PageHeading.prototype.makeSaveText = function () {
     var children = this.subpages.length;
-    var text = "<heading name='" + this.label + "' children='" + children + "'>\n";
+    var saveTitle = this.label.replace("\"", "\\\"");
+    var text = "<heading name=\"" + saveTitle + "\" children='" + children + "'>\n";
     // TODO: Uncomment all this when we actually have editable page text again
     //if(this.pagetext.length != 0) {
     //  var pagetext = this.pagetext;
