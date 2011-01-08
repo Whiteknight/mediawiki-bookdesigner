@@ -224,10 +224,10 @@ EOD;
             $row = $dbr->fetchObject($res);
             #if ($row->shared == 1 || $row->user_id == $wgUser->getId())
                 $this->displayMainOutline($row->outline, $row->id, $row->shared);
-            else {
-                $this->showErrorMessage("errload", false);
-                $this->displayMainOutline($wgRequest->getText("VBDHiddenTextArea"), 0, false);
-            }
+            #else {
+            #    $this->showErrorMessage("errload", false);
+            #    $this->displayMainOutline($wgRequest->getText("VBDHiddenTextArea"), 0, false);
+            #}
         }
         else
             $this->showErrorMessage("errload", true);
