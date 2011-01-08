@@ -410,6 +410,7 @@ EOT;
     function sanitizeOutline($text) {
         $text = str_replace("<", "&lt;", $text);
         $text = str_replace(">", "&gt;", $text);
+        $text = str_replace("'s", "ZOMGAPOSs", $text);
         return $text;
     }
 

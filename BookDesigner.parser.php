@@ -124,7 +124,7 @@ class BookDesignerParser {
         $lines = explode("\n", $text);
         for ($i = 0; $i < sizeof($lines); $i++) {
             $line = $lines[$i];
-            if (preg_match("/<page name='([^']+)' children='(\d+)'>/", $line, $matches)) {
+            if (preg_match("/<page name=\"([^\"]+)\" children='(\d+)'>/", $line, $matches)) {
                 $name = $matches[1];
                 $this->startPage($name, $name, $matches[2]);
                 return;
@@ -142,7 +142,7 @@ class BookDesignerParser {
         $lines = explode("\n", $text);
 
         $bookline = $lines[0];
-        if (!preg_match("/<page name='([^']+)' children='(\d+)'>/", $bookline, $matches)) {
+        if (!preg_match("/<page name=\"([^\"]+)\" children='(\d+)'>/", $bookline, $matches)) {
             $wgOut->addHTML("XML ERROR");
             return;
         }
@@ -152,7 +152,7 @@ class BookDesignerParser {
 
         for ($i = 0; $i < sizeof($lines); $i++) {
             $line = $lines[$i];
-            if (preg_match("/<page name='([^']+)' children='(\d+)'>/", $line, $matches)) {
+            if (preg_match("/<page name=\"([^\"]+)\" children='(\d+)'>/", $line, $matches)) {
                 $name = $matches[1];
                 if ($i == 0)
                     $fullname = $this->options->bookNamespace() . $name;
@@ -161,7 +161,7 @@ class BookDesignerParser {
                 $this->currentpage->addText($this->getPageLinkWikiText($fullname, $name) . "\n");
                 $this->startPage($name, $fullname, $matches[2]);
             }
-            else if (preg_match("/<heading name='([^']+)' children='(\d+)'>/", $line, $matches)) {
+            else if (preg_match("/<heading name=\"([^\"]+)\" children='(\d+)'>/", $line, $matches)) {
                 $name = $matches[1];
                 $this->currentpage->addText($this->getSectionHeadWikiText($name) . "\n\n");
             }
